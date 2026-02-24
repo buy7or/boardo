@@ -16,15 +16,19 @@ struct AddTaskSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 22) {
-                topBar
-                stickyEditor
-                stickerPicker
-                pinButton
-                Spacer(minLength: 10)
+            ScrollView {
+                VStack(spacing: 22) {
+                    topBar
+                    stickyEditor
+                    stickerPicker
+                    pinButton
+                    Spacer(minLength: 10)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
+            .scrollDismissesKeyboard(.interactively)
+            .dismissKeyboardOnTapOrDrag()
             BottomNavigationBar()
                 .padding(.horizontal, 12)
                 .padding(.bottom, 6)
@@ -61,10 +65,11 @@ struct AddTaskSheet: View {
                         .foregroundStyle(Color.black.opacity(0.9))
                 }
 
-                TextField("", text: $title)
+                TextField("", text: $title, axis: .vertical)
                     .font(handwrittenTitleFont)
                     .foregroundStyle(Color.black.opacity(0.88))
                     .textInputAutocapitalization(.sentences)
+                    .lineLimit(1...3)
             }
 
             ZStack(alignment: .topLeading) {
