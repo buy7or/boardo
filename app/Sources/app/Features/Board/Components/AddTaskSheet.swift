@@ -54,23 +54,31 @@ struct AddTaskSheet: View {
 
     private var stickyEditor: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("Grocery List", text: $title)
-                .font(handwrittenTitleFont)
-                .foregroundStyle(AppTheme.Colors.title)
-                .textInputAutocapitalization(.sentences)
+            ZStack(alignment: .leading) {
+                if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text("Task")
+                        .font(handwrittenTitleFont)
+                        .foregroundStyle(Color.black.opacity(0.9))
+                }
+
+                TextField("", text: $title)
+                    .font(handwrittenTitleFont)
+                    .foregroundStyle(Color.black.opacity(0.88))
+                    .textInputAutocapitalization(.sentences)
+            }
 
             ZStack(alignment: .topLeading) {
                 if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text("Don't forget the organic honey and some fresh basil for the pasta tonight!")
+                    Text("Description")
                         .font(handwrittenBodyFont)
-                        .foregroundStyle(AppTheme.Colors.title.opacity(0.52))
+                        .foregroundStyle(Color.black.opacity(0.42))
                         .padding(.top, 8)
                         .padding(.leading, 5)
                 }
 
                 TextEditor(text: $notes)
                     .font(handwrittenBodyFont)
-                    .foregroundStyle(AppTheme.Colors.title.opacity(0.9))
+                    .foregroundStyle(Color.black.opacity(0.62))
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
                     .frame(minHeight: 170)
