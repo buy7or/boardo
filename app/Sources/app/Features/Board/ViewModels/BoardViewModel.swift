@@ -22,7 +22,7 @@ final class BoardViewModel {
     }
 
     var boardTasks: [BoardTask] {
-        tasksForSelectedDay.filter { !$0.isCompleted }
+        tasksForSelectedDay
     }
 
     var inboxTasks: [BoardTask] {
@@ -32,6 +32,21 @@ final class BoardViewModel {
     func toggleCompletion(taskID: UUID) {
         guard let index = tasks.firstIndex(where: { $0.id == taskID }) else { return }
         tasks[index].isCompleted.toggle()
+    }
+
+    func task(id: UUID) -> BoardTask? {
+        tasks.first(where: { $0.id == id })
+    }
+
+    func updateTask(taskID: UUID, title: String, notes: String, category: TaskCategory) {
+        guard let index = tasks.firstIndex(where: { $0.id == taskID }) else { return }
+        tasks[index].title = title
+        tasks[index].notes = notes
+        tasks[index].category = category
+    }
+
+    func deleteTask(taskID: UUID) {
+        tasks.removeAll(where: { $0.id == taskID })
     }
 
     func moveTask(_ taskID: UUID, to date: Date?) {

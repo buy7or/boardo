@@ -4,14 +4,22 @@ struct StickyTaskCard: View {
     let task: BoardTask
     let angle: Double
     let onToggle: () -> Void
+    let onOpen: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(task.title)
-                .font(AppTheme.Typography.stickyCardBody)
-                .foregroundStyle(AppTheme.Colors.title)
-                .strikethrough(task.isCompleted)
-                .lineLimit(3)
+            ZStack(alignment: .leading) {
+                Text(task.title)
+                    .font(AppTheme.Typography.stickyCardBody)
+                    .foregroundStyle(AppTheme.Colors.title)
+                    .lineLimit(3)
+
+                Rectangle()
+                    .fill(AppTheme.Colors.accent.opacity(0.85))
+                    .frame(height: 2.2)
+                    .scaleEffect(x: task.isCompleted ? 1 : 0, y: 1, anchor: .leading)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: task.isCompleted)
+            }
 
             Spacer(minLength: 0)
 
@@ -48,6 +56,8 @@ struct StickyTaskCard: View {
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
         .rotationEffect(.degrees(angle))
         .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 5)
-        .opacity(task.isCompleted ? 0.65 : 1)
+        .opacity(task.isCompleted ? 0.82 : 1)
+        .contentShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
+        .onTapGesture(perform: onOpen)
     }
 }

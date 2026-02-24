@@ -3,6 +3,7 @@ import SwiftUI
 struct BoardScreen: View {
     @State var viewModel: BoardViewModel
     @State private var showAddTaskSheet = false
+    @State private var expandedTaskID: UUID?
     private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
     var body: some View {
@@ -13,7 +14,13 @@ struct BoardScreen: View {
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(Array(viewModel.boardTasks.enumerated()), id: \.element.id) { index, task in
                             StickyTaskCard(task: task, angle: rotation(for: index)) {
-                                viewModel.toggleCompletion(taskID: task.id)
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                    viewModel.toggleCompletion(taskID: task.id)
+                                }
+                            } onOpen: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                    expandedTaskID = task.id
+                                }
                             }
                         }
 
@@ -36,6 +43,47 @@ struct BoardScreen: View {
                 viewModel.addTask(title: title, notes: notes, category: category, dueDate: date)
             }
         }
+        .overlay {
+            if let task = expandedTask {
+                Color.black.opacity(0.28)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            expandedTaskID = nil
+                        }
+                    }
+                    .transition(.opacity)
+
+                ExpandedTaskEditor(
+                    task: task,
+                    onClose: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            expandedTaskID = nil
+                        }
+                    },
+                    onSave: { title, notes, category in
+                        viewModel.updateTask(taskID: task.id, title: title, notes: notes, category: category)
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            expandedTaskID = nil
+                        }
+                    },
+                    onToggleDone: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            viewModel.toggleCompletion(taskID: task.id)
+                        }
+                    },
+                    onDelete: {
+                        viewModel.deleteTask(taskID: task.id)
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            expandedTaskID = nil
+                        }
+                    }
+                )
+                .padding(.horizontal, 16)
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: expandedTaskID)
     }
 
     private var newNoteCard: some View {
@@ -65,5 +113,10 @@ struct BoardScreen: View {
 
     private func rotation(for index: Int) -> Double {
         index.isMultiple(of: 2) ? -1.4 : 1.1
+    }
+
+    private var expandedTask: BoardTask? {
+        guard let expandedTaskID else { return nil }
+        return viewModel.task(id: expandedTaskID)
     }
 }
