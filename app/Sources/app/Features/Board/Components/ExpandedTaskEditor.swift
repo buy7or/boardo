@@ -55,18 +55,11 @@ struct ExpandedTaskEditor: View {
                             .font(.caption.weight(.bold))
                             .foregroundStyle(AppTheme.Colors.accent)
 
-                        ZStack(alignment: .leading) {
-                            TextField("Task", text: $title, axis: .vertical)
-                                .font(AppTheme.Typography.stickyTitle)
-                                .foregroundStyle(Color.black.opacity(0.9))
-                                .lineLimit(1...3)
-
-                            Rectangle()
-                                .fill(AppTheme.Colors.accent.opacity(0.86))
-                                .frame(height: 3)
-                                .scaleEffect(x: task.isCompleted ? 1 : 0, y: 1, anchor: .leading)
-                                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: task.isCompleted)
-                        }
+                        TextField("Task", text: $title, axis: .vertical)
+                            .font(AppTheme.Typography.stickyTitle)
+                            .foregroundStyle(Color.black.opacity(0.9))
+                            .lineLimit(1...3)
+                            .animatedStrike(task.isCompleted)
 
                         TextEditor(text: $notes)
                             .font(AppTheme.Typography.stickyCardBody)

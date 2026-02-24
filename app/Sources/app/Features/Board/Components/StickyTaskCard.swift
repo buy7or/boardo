@@ -8,18 +8,11 @@ struct StickyTaskCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ZStack(alignment: .leading) {
-                Text(task.title)
-                    .font(AppTheme.Typography.stickyCardBody)
-                    .foregroundStyle(AppTheme.Colors.title)
-                    .lineLimit(3)
-
-                Rectangle()
-                    .fill(AppTheme.Colors.accent.opacity(0.85))
-                    .frame(height: 2.2)
-                    .scaleEffect(x: task.isCompleted ? 1 : 0, y: 1, anchor: .leading)
-                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: task.isCompleted)
-            }
+            Text(task.title)
+                .font(AppTheme.Typography.stickyCardBody)
+                .foregroundStyle(AppTheme.Colors.title)
+                .lineLimit(3)
+                .animatedStrike(task.isCompleted)
 
             Spacer(minLength: 0)
 

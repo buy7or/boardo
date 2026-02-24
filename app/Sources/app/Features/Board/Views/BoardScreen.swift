@@ -14,6 +14,9 @@ struct BoardScreen: View {
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(Array(viewModel.boardTasks.enumerated()), id: \.element.id) { index, task in
                             StickyTaskCard(task: task, angle: rotation(for: index)) {
+                                if !task.isCompleted {
+                                    CompletionFeedbackPlayer.play()
+                                }
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                                     viewModel.toggleCompletion(taskID: task.id)
                                 }
@@ -68,6 +71,9 @@ struct BoardScreen: View {
                         }
                     },
                     onToggleDone: {
+                        if !task.isCompleted {
+                            CompletionFeedbackPlayer.play()
+                        }
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                             viewModel.toggleCompletion(taskID: task.id)
                         }

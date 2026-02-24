@@ -1,6 +1,6 @@
 import Foundation
 
-struct BoardTask: Identifiable, Equatable {
+struct BoardTask: Identifiable, Equatable, Codable {
     let id: UUID
     var title: String
     var notes: String
