@@ -31,7 +31,7 @@ struct BoardScreen: View {
                     .padding(.bottom, 10)
             }
         }
-        .sheet(isPresented: $showAddTaskSheet) {
+        .fullScreenCover(isPresented: $showAddTaskSheet) {
             AddTaskSheet(selectedDate: viewModel.selectedDate) { title, notes, category, date in
                 viewModel.addTask(title: title, notes: notes, category: category, dueDate: date)
             }
