@@ -8,11 +8,13 @@ struct StickyTaskCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(task.title)
-                .font(AppTheme.Typography.stickyCardBody)
-                .foregroundStyle(AppTheme.Colors.title)
-                .lineLimit(3)
-                .animatedStrike(task.isCompleted)
+            AnimatedStrikethroughText(
+                text: task.title,
+                font: AppTheme.Typography.stickyCardBody,
+                color: AppTheme.Colors.title,
+                lineLimit: 3,
+                isCompleted: task.isCompleted
+            )
 
             Spacer(minLength: 0)
 

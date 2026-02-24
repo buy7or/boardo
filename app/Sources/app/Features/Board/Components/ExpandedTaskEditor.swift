@@ -59,7 +59,8 @@ struct ExpandedTaskEditor: View {
                             .font(AppTheme.Typography.stickyTitle)
                             .foregroundStyle(Color.black.opacity(0.9))
                             .lineLimit(1...3)
-                            .animatedStrike(task.isCompleted)
+                            .strikethrough(task.isCompleted, color: AppTheme.Colors.accent)
+                            .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
 
                         TextEditor(text: $notes)
                             .font(AppTheme.Typography.stickyCardBody)

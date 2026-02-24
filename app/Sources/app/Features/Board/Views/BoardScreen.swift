@@ -9,7 +9,10 @@ struct BoardScreen: View {
     var body: some View {
         BoardSurface {
             VStack(spacing: 12) {
-                CompactMonthCalendar(selectedDate: $viewModel.selectedDate)
+                CompactMonthCalendar(
+                    selectedDate: $viewModel.selectedDate,
+                    taskDates: taskDatesWithEntries
+                )
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(Array(viewModel.boardTasks.enumerated()), id: \.element.id) { index, task in
@@ -124,5 +127,14 @@ struct BoardScreen: View {
     private var expandedTask: BoardTask? {
         guard let expandedTaskID else { return nil }
         return viewModel.task(id: expandedTaskID)
+    }
+
+    private var taskDatesWithEntries: Set<Date> {
+        Set(
+            viewModel.tasks.compactMap { task in
+                guard let dueDate = task.dueDate else { return nil }
+                return Calendar.current.startOfDay(for: dueDate)
+            }
+        )
     }
 }
