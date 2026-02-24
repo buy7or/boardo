@@ -28,6 +28,12 @@ struct LargeCalendarPickerSheet: View {
         .background(AppTheme.Colors.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.large, style: .continuous))
         .shadow(color: AppTheme.Shadow.card, radius: 18, x: 0, y: 12)
+        .gesture(
+            DragGesture(minimumDistance: 24)
+                .onEnded { value in
+                    handleMonthSwipe(translation: value.translation)
+                }
+        )
     }
 
     private var capsuleDecor: some View {
@@ -166,6 +172,13 @@ struct LargeCalendarPickerSheet: View {
         withAnimation(.spring(response: 0.34, dampingFraction: 0.84)) {
             displayMonth = Self.monthStart(for: next)
         }
+    }
+
+    private func handleMonthSwipe(translation: CGSize) {
+        let horizontal = translation.width
+        let vertical = translation.height
+        guard abs(horizontal) > abs(vertical), abs(horizontal) > 40 else { return }
+        moveMonth(by: horizontal < 0 ? 1 : -1)
     }
 
     private static func monthStart(for date: Date) -> Date {

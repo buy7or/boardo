@@ -18,7 +18,7 @@ struct AnimatedStrikethroughText: View {
             GeometryReader { proxy in
                 Text(text)
                     .font(font)
-                    .foregroundStyle(color)
+                    .foregroundStyle(Color.clear)
                     .lineLimit(lineLimit)
                     .strikethrough(true, color: AppTheme.Colors.accent)
                     .mask(alignment: .leading) {
