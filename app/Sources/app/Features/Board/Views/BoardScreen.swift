@@ -3,6 +3,7 @@ import SwiftUI
 struct BoardScreen: View {
     @State var viewModel: BoardViewModel
     @State private var showAddTaskSheet = false
+    @State private var showLargeCalendar = false
     @State private var expandedTaskID: UUID?
     private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
@@ -11,7 +12,10 @@ struct BoardScreen: View {
             VStack(spacing: 12) {
                 CompactMonthCalendar(
                     selectedDate: $viewModel.selectedDate,
-                    taskDates: taskDatesWithEntries
+                    taskDates: taskDatesWithEntries,
+                    onMonthTitleTap: {
+                        showLargeCalendar = true
+                    }
                 )
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
@@ -47,6 +51,30 @@ struct BoardScreen: View {
         .fullScreenCover(isPresented: $showAddTaskSheet) {
             AddTaskSheet(selectedDate: viewModel.selectedDate) { title, notes, category, date in
                 viewModel.addTask(title: title, notes: notes, category: category, dueDate: date)
+            }
+        }
+        .overlay {
+            if showLargeCalendar {
+                Color.black.opacity(0.2)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                            showLargeCalendar = false
+                        }
+                    }
+                    .transition(.opacity)
+
+                LargeCalendarPickerSheet(
+                    selectedDate: $viewModel.selectedDate,
+                    tasks: viewModel.tasks,
+                    onClose: {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                            showLargeCalendar = false
+                        }
+                    }
+                )
+                .padding(.horizontal, 20)
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
         }
         .overlay {
@@ -93,6 +121,7 @@ struct BoardScreen: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: expandedTaskID)
+        .animation(.spring(response: 0.32, dampingFraction: 0.84), value: showLargeCalendar)
     }
 
     private var newNoteCard: some View {

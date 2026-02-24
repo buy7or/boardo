@@ -3,6 +3,7 @@ import SwiftUI
 struct CompactMonthCalendar: View {
     @Binding var selectedDate: Date
     let taskDates: Set<Date>
+    let onMonthTitleTap: () -> Void
 
     private let weekdays = ["S", "M", "T", "W", "T", "F", "S"]
     private let calendar = Calendar.current
@@ -17,8 +18,15 @@ struct CompactMonthCalendar: View {
                 }
                 .buttonStyle(.plain)
                 Spacer()
-                Text(selectedDate.boardMonthYearTitle)
-                    .font(.headline)
+                Button(action: onMonthTitleTap) {
+                    HStack(spacing: 6) {
+                        Text(selectedDate.boardMonthYearTitle)
+                            .font(.headline)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.bold))
+                    }
+                }
+                .buttonStyle(.plain)
                 Spacer()
                 Button {
                     moveWeek(by: 7)
