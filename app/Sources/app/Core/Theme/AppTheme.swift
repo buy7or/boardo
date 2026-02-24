@@ -23,4 +23,12 @@ enum AppTheme {
     enum Shadow {
         static let card = Color.black.opacity(0.08)
     }
+
+    enum Typography {
+        static let stickyTitle = Font.custom("MarkerFelt-Wide", size: 30)
+        static let stickyBody = Font.custom("MarkerFelt-Thin", size: 24)
+        static let stickyTag = Font.custom("MarkerFelt-Thin", size: 14)
+        static let stickyCardBody = Font.custom("MarkerFelt-Thin", size: 18)
+        static let stickyCardTag = Font.custom("MarkerFelt-Thin", size: 12)
+    }
 }

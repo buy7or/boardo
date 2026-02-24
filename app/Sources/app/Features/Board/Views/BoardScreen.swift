@@ -51,8 +51,7 @@ struct BoardScreen: View {
                     .clipShape(Circle())
                     .shadow(color: AppTheme.Shadow.card, radius: 6, x: 0, y: 4)
                 Text("NEW NOTE")
-                    .font(.caption)
-                    .fontWeight(.bold)
+                    .font(AppTheme.Typography.stickyTag)
                     .foregroundStyle(AppTheme.Colors.subtitle)
             }
             .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140)

@@ -7,11 +7,8 @@ struct StickyTaskCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Spacer(minLength: 0)
-
             Text(task.title)
-                .font(.body)
-                .fontWeight(.semibold)
+                .font(AppTheme.Typography.stickyCardBody)
                 .foregroundStyle(AppTheme.Colors.title)
                 .strikethrough(task.isCompleted)
                 .lineLimit(3)
@@ -20,8 +17,7 @@ struct StickyTaskCard: View {
 
             HStack {
                 Text(task.category.boardTag)
-                    .font(.caption2)
-                    .fontWeight(.bold)
+                    .font(AppTheme.Typography.stickyCardTag)
                     .foregroundStyle(AppTheme.Colors.subtitle.opacity(0.85))
 
                 Spacer()
@@ -37,6 +33,18 @@ struct StickyTaskCard: View {
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140, alignment: .leading)
         .background(task.category.color)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.white.opacity(0.4))
+                .frame(width: 46, height: 10)
+                .offset(y: -5)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            Circle()
+                .fill(Color.white.opacity(0.2))
+                .frame(width: 26, height: 26)
+                .offset(x: 11, y: 11)
+        }
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
         .rotationEffect(.degrees(angle))
         .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 5)

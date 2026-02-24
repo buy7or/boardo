@@ -10,8 +10,8 @@ struct AddTaskSheet: View {
     let selectedDate: Date
     let onSave: (String, String, TaskCategory, Date?) -> Void
     private let stickerCategories: [TaskCategory] = [.personal, .work, .family, .urgent]
-    private var handwrittenTitleFont: Font { .custom("MarkerFelt-Wide", size: 33) }
-    private var handwrittenBodyFont: Font { .custom("MarkerFelt-Thin", size: 30) }
+    private var handwrittenTitleFont: Font { AppTheme.Typography.stickyTitle }
+    private var handwrittenBodyFont: Font { AppTheme.Typography.stickyBody }
     private var stickyColor: Color { selectedCategory.color }
 
     var body: some View {
