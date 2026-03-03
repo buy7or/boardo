@@ -15,24 +15,20 @@ struct AddTaskSheet: View {
     private var stickyColor: Color { selectedCategory.color }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 22) {
-                    topBar
-                    stickyEditor
-                    stickerPicker
-                    pinButton
-                    Spacer(minLength: 10)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
+        ScrollView {
+            VStack(spacing: 22) {
+                topBar
+                stickyEditor
+                stickerPicker
+                pinButton
+                Spacer(minLength: 10)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .dismissKeyboardOnTapOrDrag()
-            BottomNavigationBar(selectedTab: .board) { _ in }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 6)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 24)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .dismissKeyboardOnTapOrDrag()
         .background(AppTheme.Colors.boardBackground.ignoresSafeArea())
     }
 

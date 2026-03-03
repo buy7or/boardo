@@ -3,6 +3,7 @@ import SwiftUI
 struct BoardScreen: View {
     @State var viewModel: BoardViewModel
     var showsBottomNavigation: Bool = true
+    var onBottomNavigationVisibilityChange: (Bool) -> Void = { _ in }
     @State private var showAddTaskSheet = false
     @State private var showLargeCalendar = false
     @State private var expandedTaskID: UUID?
@@ -125,6 +126,15 @@ struct BoardScreen: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: expandedTaskID)
         .animation(.spring(response: 0.32, dampingFraction: 0.84), value: showLargeCalendar)
+        .onAppear {
+            notifyBottomNavigationVisibility()
+        }
+        .onChange(of: showAddTaskSheet) { _, _ in
+            notifyBottomNavigationVisibility()
+        }
+        .onChange(of: expandedTaskID) { _, _ in
+            notifyBottomNavigationVisibility()
+        }
     }
 
     private var newNoteCard: some View {
@@ -168,5 +178,9 @@ struct BoardScreen: View {
                 return Calendar.current.startOfDay(for: dueDate)
             }
         )
+    }
+
+    private func notifyBottomNavigationVisibility() {
+        onBottomNavigationVisibilityChange(showAddTaskSheet || expandedTaskID != nil)
     }
 }

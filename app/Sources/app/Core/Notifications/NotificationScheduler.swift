@@ -27,7 +27,7 @@ struct NotificationScheduler {
     func scheduleTestNotification(after seconds: TimeInterval = 10) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Boardo"
-        content.body = "Esta es una notificacion de prueba."
+        content.body = "Si no lo haces mañana te odiarás"
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
