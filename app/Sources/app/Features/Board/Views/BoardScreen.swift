@@ -4,6 +4,7 @@ struct BoardScreen: View {
     @Bindable var viewModel: BoardViewModel
     var showsBottomNavigation: Bool = true
     var onBottomNavigationVisibilityChange: (Bool) -> Void = { _ in }
+    var onPagingLockChange: (Bool) -> Void = { _ in }
     @State private var showAddTaskSheet = false
     @State private var showLargeCalendar = false
     @State private var expandedTaskID: UUID?
@@ -66,6 +67,11 @@ struct BoardScreen: View {
                             showLargeCalendar = false
                         }
                     }
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in }
+                            .onEnded { _ in }
+                    )
                     .transition(.opacity)
 
                 LargeCalendarPickerSheet(
@@ -127,13 +133,16 @@ struct BoardScreen: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: expandedTaskID)
         .animation(.spring(response: 0.32, dampingFraction: 0.84), value: showLargeCalendar)
         .onAppear {
-            notifyBottomNavigationVisibility()
+            notifyScreenState()
         }
         .onChange(of: showAddTaskSheet) { _, _ in
-            notifyBottomNavigationVisibility()
+            notifyScreenState()
         }
         .onChange(of: expandedTaskID) { _, _ in
-            notifyBottomNavigationVisibility()
+            notifyScreenState()
+        }
+        .onChange(of: showLargeCalendar) { _, _ in
+            notifyScreenState()
         }
     }
 
@@ -180,7 +189,9 @@ struct BoardScreen: View {
         )
     }
 
-    private func notifyBottomNavigationVisibility() {
-        onBottomNavigationVisibilityChange(showAddTaskSheet || expandedTaskID != nil)
+    private func notifyScreenState() {
+        let hasPresentedOverlay = showAddTaskSheet || expandedTaskID != nil || showLargeCalendar
+        onBottomNavigationVisibilityChange(hasPresentedOverlay)
+        onPagingLockChange(hasPresentedOverlay)
     }
 }
