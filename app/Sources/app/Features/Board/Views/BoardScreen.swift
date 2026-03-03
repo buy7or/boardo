@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BoardScreen: View {
-    @State var viewModel: BoardViewModel
+    @Bindable var viewModel: BoardViewModel
     var showsBottomNavigation: Bool = true
     var onBottomNavigationVisibilityChange: (Bool) -> Void = { _ in }
     @State private var showAddTaskSheet = false
