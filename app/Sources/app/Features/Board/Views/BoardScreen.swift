@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BoardScreen: View {
     @State var viewModel: BoardViewModel
+    var showsBottomNavigation: Bool = true
     @State private var showAddTaskSheet = false
     @State private var showLargeCalendar = false
     @State private var expandedTaskID: UUID?
@@ -43,9 +44,11 @@ struct BoardScreen: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .overlay(alignment: .bottom) {
-                BottomNavigationBar()
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 10)
+                if showsBottomNavigation {
+                    BottomNavigationBar(selectedTab: .board) { _ in }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 10)
+                }
             }
         }
         .fullScreenCover(isPresented: $showAddTaskSheet) {

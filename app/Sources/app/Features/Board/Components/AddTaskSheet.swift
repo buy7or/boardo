@@ -29,7 +29,7 @@ struct AddTaskSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .dismissKeyboardOnTapOrDrag()
-            BottomNavigationBar()
+            BottomNavigationBar(selectedTab: .board) { _ in }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 6)
         }
