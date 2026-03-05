@@ -28,7 +28,7 @@ struct AppRootView: View {
                     )
                     .frame(width: geometry.size.width)
 
-                    SettingsScreen()
+                    SettingsScreen(viewModel: boardViewModel)
                         .frame(width: geometry.size.width)
                 }
                 .frame(width: geometry.size.width * 2, alignment: .leading)

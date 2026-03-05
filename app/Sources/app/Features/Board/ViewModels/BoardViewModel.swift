@@ -5,14 +5,41 @@ import Observation
 final class BoardViewModel {
     var selectedDate: Date = Date()
     var tasks: [BoardTask]
+    var categories: [TaskCategory]
     private let store: BoardTasksStore
+    private let categoriesStore: BoardCategoriesStore
 
-    init(tasks: [BoardTask]? = nil, store: BoardTasksStore = BoardTasksStore()) {
+    init(
+        tasks: [BoardTask]? = nil,
+        store: BoardTasksStore = BoardTasksStore(),
+        categoriesStore: BoardCategoriesStore = BoardCategoriesStore()
+    ) {
         self.store = store
+        self.categoriesStore = categoriesStore
+        var loadedCategories = categoriesStore.loadCategories() ?? TaskCategory.defaultCategories
+
+        let initialTasks: [BoardTask]
         if let tasks {
-            self.tasks = tasks
+            initialTasks = tasks
         } else {
-            self.tasks = store.loadTasks() ?? BoardMockData.sampleTasks()
+            initialTasks = store.loadTasks() ?? BoardMockData.sampleTasks()
+        }
+
+        var hasCategoryChanges = false
+        let normalizedTasks = initialTasks.map { task in
+            var mutableTask = task
+            mutableTask.category = Self.normalizedCategory(
+                for: task.category,
+                in: &loadedCategories,
+                didChange: &hasCategoryChanges
+            )
+            return mutableTask
+        }
+        self.categories = loadedCategories
+        self.tasks = normalizedTasks
+
+        if hasCategoryChanges {
+            categoriesStore.saveCategories(loadedCategories)
         }
     }
 
@@ -47,9 +74,14 @@ final class BoardViewModel {
 
     func updateTask(taskID: UUID, title: String, notes: String, category: TaskCategory) {
         guard let index = tasks.firstIndex(where: { $0.id == taskID }) else { return }
+        var hasCategoryChanges = false
+        let normalized = normalizedCategory(for: category, didChange: &hasCategoryChanges)
         tasks[index].title = title
         tasks[index].notes = notes
-        tasks[index].category = category
+        tasks[index].category = normalized
+        if hasCategoryChanges {
+            categoriesStore.saveCategories(categories)
+        }
         persist()
     }
 
@@ -65,12 +97,65 @@ final class BoardViewModel {
     }
 
     func addTask(title: String, notes: String, category: TaskCategory, dueDate: Date?) {
-        let newTask = BoardTask(title: title, notes: notes, category: category, dueDate: dueDate)
+        var hasCategoryChanges = false
+        let normalized = normalizedCategory(for: category, didChange: &hasCategoryChanges)
+        let newTask = BoardTask(title: title, notes: notes, category: normalized, dueDate: dueDate)
         tasks.insert(newTask, at: 0)
+        if hasCategoryChanges {
+            categoriesStore.saveCategories(categories)
+        }
+        persist()
+    }
+
+    func addCategory(name: String, colorStyle: PostItColorStyle, icon: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+
+        guard !categories.contains(where: { $0.label.caseInsensitiveCompare(trimmedName) == .orderedSame }) else {
+            return
+        }
+
+        categories.append(TaskCategory(label: trimmedName, icon: icon, colorStyle: colorStyle))
+        categoriesStore.saveCategories(categories)
+    }
+
+    func deleteCategory(_ category: TaskCategory) {
+        guard categories.count > 1 else { return }
+        guard categories.contains(where: { $0.id == category.id }) else { return }
+        guard let replacement = categories.first(where: { $0.id != category.id }) else { return }
+
+        categories.removeAll(where: { $0.id == category.id })
+        for index in tasks.indices where tasks[index].category.id == category.id {
+            tasks[index].category = replacement
+        }
+
+        categoriesStore.saveCategories(categories)
         persist()
     }
 
     private func persist() {
         store.saveTasks(tasks)
+    }
+
+    private func normalizedCategory(for category: TaskCategory, didChange: inout Bool) -> TaskCategory {
+        Self.normalizedCategory(for: category, in: &categories, didChange: &didChange)
+    }
+
+    private static func normalizedCategory(
+        for category: TaskCategory,
+        in categories: inout [TaskCategory],
+        didChange: inout Bool
+    ) -> TaskCategory {
+        if let existingByID = categories.first(where: { $0.id == category.id }) {
+            return existingByID
+        }
+
+        if let existingByName = categories.first(where: { $0.label.caseInsensitiveCompare(category.label) == .orderedSame }) {
+            return existingByName
+        }
+
+        categories.append(category)
+        didChange = true
+        return category
     }
 }

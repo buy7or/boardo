@@ -54,7 +54,7 @@ struct BoardScreen: View {
             }
         }
         .fullScreenCover(isPresented: $showAddTaskSheet) {
-            AddTaskSheet(selectedDate: viewModel.selectedDate) { title, notes, category, date in
+            AddTaskSheet(selectedDate: viewModel.selectedDate, categories: viewModel.categories) { title, notes, category, date in
                 viewModel.addTask(title: title, notes: notes, category: category, dueDate: date)
             }
         }
@@ -100,6 +100,7 @@ struct BoardScreen: View {
 
                 ExpandedTaskEditor(
                     task: task,
+                    categories: viewModel.categories,
                     onClose: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                             expandedTaskID = nil

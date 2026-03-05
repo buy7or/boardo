@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExpandedTaskEditor: View {
     let task: BoardTask
+    let categories: [TaskCategory]
     let onClose: () -> Void
     let onSave: (_ title: String, _ notes: String, _ category: TaskCategory) -> Void
     let onToggleDone: () -> Void
@@ -13,19 +14,23 @@ struct ExpandedTaskEditor: View {
 
     init(
         task: BoardTask,
+        categories: [TaskCategory],
         onClose: @escaping () -> Void,
         onSave: @escaping (_ title: String, _ notes: String, _ category: TaskCategory) -> Void,
         onToggleDone: @escaping () -> Void,
         onDelete: @escaping () -> Void
     ) {
         self.task = task
+        self.categories = categories
         self.onClose = onClose
         self.onSave = onSave
         self.onToggleDone = onToggleDone
         self.onDelete = onDelete
         _title = State(initialValue: task.title)
         _notes = State(initialValue: task.notes)
-        _category = State(initialValue: task.category)
+        _category = State(
+            initialValue: categories.first(where: { $0.id == task.category.id }) ?? categories.first ?? task.category
+        )
     }
 
     var body: some View {
@@ -90,20 +95,22 @@ struct ExpandedTaskEditor: View {
                     .shadow(color: AppTheme.Shadow.card, radius: 12, x: 0, y: 8)
                 }
 
-                HStack(spacing: 10) {
-                    ForEach([TaskCategory.personal, .routine, .work, .family, .urgent]) { item in
-                        Button {
-                            category = item
-                        } label: {
-                            Circle()
-                                .fill(item.color)
-                                .frame(width: 26, height: 26)
-                                .overlay {
-                                    Circle()
-                                        .stroke(AppTheme.Colors.accent, lineWidth: category == item ? 2 : 0)
-                                }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(categories) { item in
+                            Button {
+                                category = item
+                            } label: {
+                                Circle()
+                                    .fill(item.color)
+                                    .frame(width: 26, height: 26)
+                                    .overlay {
+                                        Circle()
+                                            .stroke(AppTheme.Colors.accent, lineWidth: category == item ? 2 : 0)
+                                    }
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
 

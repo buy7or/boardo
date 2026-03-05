@@ -5,14 +5,25 @@ struct AddTaskSheet: View {
 
     @State private var title: String = ""
     @State private var notes: String = ""
-    @State private var selectedCategory: TaskCategory = .personal
+    @State private var selectedCategory: TaskCategory
 
     let selectedDate: Date
+    let categories: [TaskCategory]
     let onSave: (String, String, TaskCategory, Date?) -> Void
-    private let stickerCategories: [TaskCategory] = [.personal, .work, .family, .urgent]
     private var handwrittenTitleFont: Font { AppTheme.Typography.stickyTitle }
     private var handwrittenBodyFont: Font { AppTheme.Typography.stickyBody }
     private var stickyColor: Color { selectedCategory.color }
+
+    init(
+        selectedDate: Date,
+        categories: [TaskCategory],
+        onSave: @escaping (String, String, TaskCategory, Date?) -> Void
+    ) {
+        self.selectedDate = selectedDate
+        self.categories = categories
+        self.onSave = onSave
+        _selectedCategory = State(initialValue: categories.first ?? .personal)
+    }
 
     var body: some View {
         ScrollView {
@@ -110,38 +121,41 @@ struct AddTaskSheet: View {
                 .font(.headline)
                 .foregroundStyle(AppTheme.Colors.subtitle)
 
-            HStack(spacing: 16) {
-                ForEach(stickerCategories) { category in
-                    Button {
-                        selectedCategory = category
-                    } label: {
-                        VStack(spacing: 7) {
-                            Circle()
-                                .fill(category.color)
-                                .frame(width: 42, height: 42)
-                                .overlay {
-                                    Image(systemName: category.icon)
-                                        .font(.caption.weight(.bold))
-                                        .foregroundStyle(AppTheme.Colors.title.opacity(0.7))
-                                }
-                                .overlay {
-                                    Circle()
-                                        .stroke(
-                                            AppTheme.Colors.accent,
-                                            style: StrokeStyle(
-                                                lineWidth: selectedCategory == category ? 1.8 : 0,
-                                                dash: [5]
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(categories) { category in
+                        Button {
+                            selectedCategory = category
+                        } label: {
+                            VStack(spacing: 7) {
+                                Circle()
+                                    .fill(category.color)
+                                    .frame(width: 42, height: 42)
+                                    .overlay {
+                                        Image(systemName: category.icon)
+                                            .font(.caption.weight(.bold))
+                                            .foregroundStyle(AppTheme.Colors.title.opacity(0.7))
+                                    }
+                                    .overlay {
+                                        Circle()
+                                            .stroke(
+                                                AppTheme.Colors.accent,
+                                                style: StrokeStyle(
+                                                    lineWidth: selectedCategory == category ? 1.8 : 0,
+                                                    dash: [5]
+                                                )
                                             )
-                                        )
-                                        .padding(-4)
-                                }
+                                            .padding(-4)
+                                    }
 
-                            Text(category.label)
-                                .font(.caption2)
-                                .foregroundStyle(AppTheme.Colors.subtitle)
+                                Text(category.label)
+                                    .font(.caption2)
+                                    .foregroundStyle(AppTheme.Colors.subtitle)
+                                    .lineLimit(1)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -169,7 +183,7 @@ struct AddTaskSheet: View {
 #if DEBUG
 struct AddTaskSheetPreview: View {
     var body: some View {
-        AddTaskSheet(selectedDate: .now) { _, _, _, _ in
+        AddTaskSheet(selectedDate: .now, categories: TaskCategory.defaultCategories) { _, _, _, _ in
         }
     }
 }

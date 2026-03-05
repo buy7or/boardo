@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct SettingsScreen: View {
+    @Bindable var viewModel: BoardViewModel
     @State private var statusMessage = "Pulsa el boton para programar una notificacion de prueba."
+    @State private var showCategoryManager = false
     private let scheduler = NotificationScheduler()
 
     var body: some View {
@@ -36,6 +38,23 @@ struct SettingsScreen: View {
                 }
                 .buttonStyle(.plain)
 
+                Button {
+                    showCategoryManager = true
+                } label: {
+                    Label("Gestionar categorias", systemImage: "square.grid.2x2.fill")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(AppTheme.Colors.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.white)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.medium, style: .continuous)
+                                .stroke(AppTheme.Colors.accent.opacity(0.35), lineWidth: 1)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.medium, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
                 Text("La notificacion llegara en 10 segundos.")
                     .font(.caption)
                     .foregroundStyle(AppTheme.Colors.subtitle)
@@ -45,6 +64,9 @@ struct SettingsScreen: View {
             .padding(.horizontal, 24)
             .padding(.top, 40)
             .padding(.bottom, 110)
+        }
+        .sheet(isPresented: $showCategoryManager) {
+            CategoryManagerSheet(viewModel: viewModel)
         }
     }
 
