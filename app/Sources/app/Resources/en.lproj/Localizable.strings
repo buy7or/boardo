@@ -1,0 +1,53 @@
+"tab.board" = "Board";
+"tab.settings" = "Settings";
+
+"board.header.workspace" = "My Workspace";
+"board.header.subtitle" = "Let's get organized";
+"board.header.streak" = "7 DAY STREAK";
+"board.newNote" = "NEW NOTE";
+
+"task.add.title" = "New Memory";
+"task.add.placeholder.title" = "Task";
+"task.add.placeholder.notes" = "Description";
+"task.add.pickSticker" = "Pick a Sticker";
+"task.add.pin" = "Pin to Board";
+
+"task.edit.dueToday" = "DUE TODAY";
+"task.edit.placeholder.title" = "Task";
+"task.edit.attachment" = "attachment";
+"task.edit.finishedQuestion" = "FINISHED WITH THIS?";
+"task.edit.markPending" = "Mark as Pending";
+"task.edit.complete" = "Complete Task";
+
+"common.delete" = "Delete";
+"common.saveChanges" = "Save changes";
+
+"inbox.title" = "Inbox";
+"inbox.subtitle" = "Tasks without date";
+
+"settings.title" = "Settings";
+"settings.manageCategories" = "Manage categories";
+"settings.notifications.label" = "Daily notification";
+"settings.notifications.description" = "Receive a reminder every day at your chosen time.";
+"settings.notifications.timePicker" = "Reminder time";
+"settings.notifications.status.initial" = "Set your daily notification and enable the reminder.";
+"settings.notifications.status.disabled" = "Daily reminder disabled.";
+"settings.notifications.status.timeSaved" = "Time saved. Turn on daily notifications to schedule it.";
+"settings.notifications.status.invalidTime" = "Could not read the selected time.";
+"settings.notifications.status.enabledAt" = "Daily notification enabled at %@.";
+"settings.notifications.status.permissionError" = "Could not enable daily notifications. Check Boardo notification permissions.";
+
+"settings.categories.navTitle" = "Categories";
+"settings.categories.create" = "Create category";
+"settings.categories.name" = "Name";
+"settings.categories.color" = "Post-it color";
+"settings.categories.icon" = "Icon";
+"settings.categories.add" = "Add category";
+"settings.categories.available" = "Available categories";
+
+"notification.daily.body" = "Review your tasks today to keep momentum.";
+
+"settings.language.title" = "App language";
+"settings.language.system" = "System";
+"settings.language.spanish" = "Spanish";
+"settings.language.english" = "English";

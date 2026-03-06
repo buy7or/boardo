@@ -1,0 +1,53 @@
+"tab.board" = "Tablero";
+"tab.settings" = "Ajustes";
+
+"board.header.workspace" = "Mi espacio";
+"board.header.subtitle" = "Vamos a organizarnos";
+"board.header.streak" = "RACHA DE 7 DIAS";
+"board.newNote" = "NUEVA NOTA";
+
+"task.add.title" = "Nueva nota";
+"task.add.placeholder.title" = "Tarea";
+"task.add.placeholder.notes" = "Descripcion";
+"task.add.pickSticker" = "Elige una pegatina";
+"task.add.pin" = "Fijar en tablero";
+
+"task.edit.dueToday" = "PARA HOY";
+"task.edit.placeholder.title" = "Tarea";
+"task.edit.attachment" = "adjunto";
+"task.edit.finishedQuestion" = "HAS TERMINADO?";
+"task.edit.markPending" = "Marcar pendiente";
+"task.edit.complete" = "Completar tarea";
+
+"common.delete" = "Eliminar";
+"common.saveChanges" = "Guardar cambios";
+
+"inbox.title" = "Inbox";
+"inbox.subtitle" = "Tareas sin fecha";
+
+"settings.title" = "Ajustes";
+"settings.manageCategories" = "Gestionar categorias";
+"settings.notifications.label" = "Notificacion diaria";
+"settings.notifications.description" = "Recibe un recordatorio cada dia a la hora elegida.";
+"settings.notifications.timePicker" = "Hora del recordatorio";
+"settings.notifications.status.initial" = "Configura la notificacion diaria y activa el recordatorio.";
+"settings.notifications.status.disabled" = "Recordatorio diario desactivado.";
+"settings.notifications.status.timeSaved" = "Hora guardada. Activa la notificacion diaria para programarla.";
+"settings.notifications.status.invalidTime" = "No se pudo leer la hora seleccionada.";
+"settings.notifications.status.enabledAt" = "Notificacion diaria activa a las %@.";
+"settings.notifications.status.permissionError" = "No se pudo activar la notificacion diaria. Revisa los permisos de Boardo.";
+
+"settings.categories.navTitle" = "Categorias";
+"settings.categories.create" = "Crear categoria";
+"settings.categories.name" = "Nombre";
+"settings.categories.color" = "Color del post-it";
+"settings.categories.icon" = "Icono";
+"settings.categories.add" = "Agregar categoria";
+"settings.categories.available" = "Categorias disponibles";
+
+"notification.daily.body" = "Revisa tus tareas de hoy para mantener el ritmo.";
+
+"settings.language.title" = "Idioma de la app";
+"settings.language.system" = "Sistema";
+"settings.language.spanish" = "Espanol";
+"settings.language.english" = "Ingles";
