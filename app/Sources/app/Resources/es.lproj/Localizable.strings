@@ -5,6 +5,8 @@
 "board.header.subtitle" = "Vamos a organizarnos";
 "board.header.streak" = "RACHA DE 7 DIAS";
 "board.newNote" = "NUEVA NOTA";
+"board.streak.title" = "Racha diaria";
+"board.streak.days" = "Racha de %d dias";
 "board.weeklyProgress.title" = "Progreso semanal";
 "board.weeklyProgress.detail" = "%d%% completado esta semana";
 

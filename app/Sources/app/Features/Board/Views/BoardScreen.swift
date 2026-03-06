@@ -21,6 +21,8 @@ struct BoardScreen: View {
                     }
                 )
 
+                streakStickyCard
+
                 weeklyProgressCard
 
                 ScrollView {
@@ -207,6 +209,51 @@ struct BoardScreen: View {
         .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 4)
     }
 
+    private var streakStickyCard: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .stroke(AppTheme.Colors.accent.opacity(0.65), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                    .frame(width: 38, height: 38)
+
+                Image(systemName: "flame")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.Colors.accent)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.tr("board.streak.title"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.Colors.subtitle)
+
+                Text(
+                    String(
+                        format: L10n.tr("board.streak.days"),
+                        dailyStreakCount
+                    )
+                )
+                .font(AppTheme.Typography.stickyBody)
+                .foregroundStyle(AppTheme.Colors.title.opacity(0.9))
+                .lineLimit(1)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.Colors.stickyYellow)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.white.opacity(0.35))
+                .frame(width: 54, height: 12)
+                .offset(y: -6)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
+        .rotationEffect(.degrees(-1.1))
+        .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 4)
+    }
+
     private func rotation(for index: Int) -> Double {
         index.isMultiple(of: 2) ? -1.4 : 1.1
     }
@@ -250,6 +297,27 @@ struct BoardScreen: View {
         let left = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: lhs)
         let right = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: rhs)
         return left.weekOfYear == right.weekOfYear && left.yearForWeekOfYear == right.yearForWeekOfYear
+    }
+
+    private var dailyStreakCount: Int {
+        let calendar = Calendar.current
+        let completedDays = Set(
+            viewModel.tasks.compactMap { task -> Date? in
+                guard task.isCompleted, let dueDate = task.dueDate else { return nil }
+                return calendar.startOfDay(for: dueDate)
+            }
+        )
+
+        var streak = 0
+        var currentDay = calendar.startOfDay(for: Date())
+
+        while completedDays.contains(currentDay) {
+            streak += 1
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDay) else { break }
+            currentDay = previousDay
+        }
+
+        return streak
     }
 
     private func notifyScreenState() {
