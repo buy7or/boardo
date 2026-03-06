@@ -6,6 +6,8 @@ enum NotificationSchedulerError: Error {
 }
 
 struct NotificationScheduler {
+    static let dailyNotificationIdentifier = "boardo.daily.notification"
+
     func requestAuthorizationIfNeeded() async throws {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
@@ -24,15 +26,19 @@ struct NotificationScheduler {
         }
     }
 
-    func scheduleTestNotification(after seconds: TimeInterval = 10) async throws {
+    func scheduleDailyNotification(hour: Int, minute: Int) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Boardo"
-        content.body = "Si no lo haces mañana te odiarás"
+        content.body = "Revisa tus tareas de hoy para mantener el ritmo."
         content.sound = .default
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         let request = UNNotificationRequest(
-            identifier: "boardo.test.notification",
+            identifier: Self.dailyNotificationIdentifier,
             content: content,
             trigger: trigger
         )
@@ -40,5 +46,10 @@ struct NotificationScheduler {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [request.identifier])
         try await center.add(request)
+    }
+
+    func cancelDailyNotification() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.dailyNotificationIdentifier])
     }
 }
