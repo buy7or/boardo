@@ -7,10 +7,13 @@ struct BottomNavigationBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            navItem(icon: "square.grid.2x2.fill", title: "Board", selected: selectedTab == .board) {
+            navItem(icon: "square.grid.2x2.fill", title: L10n.tr("tab.board"), selected: selectedTab == .board) {
                 onSelect(.board)
             }
-            navItem(icon: "gearshape.fill", title: "Settings", selected: selectedTab == .settings) {
+            navItem(icon: "chart.bar.xaxis", title: L10n.tr("tab.stats"), selected: selectedTab == .stats) {
+                onSelect(.stats)
+            }
+            navItem(icon: "gearshape.fill", title: L10n.tr("tab.settings"), selected: selectedTab == .settings) {
                 onSelect(.settings)
             }
         }

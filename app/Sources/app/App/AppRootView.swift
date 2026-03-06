@@ -2,6 +2,7 @@ import SwiftUI
 
 enum AppTab: Int, Hashable {
     case board
+    case stats
     case settings
 }
 
@@ -28,10 +29,13 @@ struct AppRootView: View {
                     )
                     .frame(width: geometry.size.width)
 
+                    StatsScreen(viewModel: boardViewModel)
+                        .frame(width: geometry.size.width)
+
                     SettingsScreen(viewModel: boardViewModel)
                         .frame(width: geometry.size.width)
                 }
-                .frame(width: geometry.size.width * 2, alignment: .leading)
+                .frame(width: geometry.size.width * CGFloat(tabCount), alignment: .leading)
                 .offset(x: pageOffset(for: geometry.size.width))
                 .animation(.interactiveSpring(response: 0.34, dampingFraction: 0.86), value: selectedTab)
                 .animation(.interactiveSpring(response: 0.22, dampingFraction: 0.92), value: dragTranslation)
@@ -56,8 +60,8 @@ struct AppRootView: View {
 
     private func pageOffset(for pageWidth: CGFloat) -> CGFloat {
         let baseOffset = -CGFloat(selectedTab.rawValue) * pageWidth
-        let leadingLimit = CGFloat(AppTab.board.rawValue) * pageWidth
-        let trailingLimit = -CGFloat(AppTab.settings.rawValue) * pageWidth
+        let leadingLimit = 0.0 * pageWidth
+        let trailingLimit = -CGFloat(tabCount - 1) * pageWidth
         return min(max(baseOffset + dragTranslation, trailingLimit), leadingLimit)
     }
 
@@ -75,11 +79,21 @@ struct AppRootView: View {
                 let threshold = pageWidth * 0.2
                 let predicted = value.predictedEndTranslation.width
 
-                if selectedTab == .board && (value.translation.width < -threshold || predicted < -pageWidth * 0.35) {
-                    selectedTab = .settings
-                } else if selectedTab == .settings && (value.translation.width > threshold || predicted > pageWidth * 0.35) {
-                    selectedTab = .board
+                if value.translation.width < -threshold || predicted < -pageWidth * 0.35 {
+                    moveToAdjacentTab(step: 1)
+                } else if value.translation.width > threshold || predicted > pageWidth * 0.35 {
+                    moveToAdjacentTab(step: -1)
                 }
             }
+    }
+
+    private var tabCount: Int {
+        AppTab.settings.rawValue + 1
+    }
+
+    private func moveToAdjacentTab(step: Int) {
+        let nextRaw = max(0, min(tabCount - 1, selectedTab.rawValue + step))
+        guard let nextTab = AppTab(rawValue: nextRaw) else { return }
+        selectedTab = nextTab
     }
 }

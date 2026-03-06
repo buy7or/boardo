@@ -1,4 +1,5 @@
 "tab.board" = "Board";
+"tab.stats" = "Stats";
 "tab.settings" = "Settings";
 
 "board.header.workspace" = "My Workspace";
@@ -55,3 +56,17 @@
 "settings.language.system" = "System";
 "settings.language.spanish" = "Spanish";
 "settings.language.english" = "English";
+
+"stats.title" = "Statistics";
+"stats.subtitle" = "Your productivity snapshot";
+"stats.currentStreak" = "Current streak";
+"stats.longestStreak" = "Longest streak";
+"stats.completedTasks" = "Completed tasks";
+"stats.completionRate" = "Completion rate";
+"stats.bestDay" = "Day with most tasks";
+"stats.bestWeek" = "Week with most tasks";
+"stats.daysValue" = "%d days";
+"stats.percentWithCount" = "%d%% (%d/%d)";
+"stats.bestDateWithCount" = "%@ (%d)";
+"stats.bestWeekWithCount" = "%@ (%d)";
+"stats.noData" = "No data yet";

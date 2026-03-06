@@ -1,4 +1,5 @@
 "tab.board" = "Tablero";
+"tab.stats" = "Estadisticas";
 "tab.settings" = "Ajustes";
 
 "board.header.workspace" = "Mi espacio";
@@ -55,3 +56,17 @@
 "settings.language.system" = "Sistema";
 "settings.language.spanish" = "Espanol";
 "settings.language.english" = "Ingles";
+
+"stats.title" = "Estadisticas";
+"stats.subtitle" = "Resumen de productividad";
+"stats.currentStreak" = "Racha actual";
+"stats.longestStreak" = "Racha mas larga";
+"stats.completedTasks" = "Tareas completadas";
+"stats.completionRate" = "Porcentaje completado";
+"stats.bestDay" = "Dia con mas tareas";
+"stats.bestWeek" = "Semana con mas tareas";
+"stats.daysValue" = "%d dias";
+"stats.percentWithCount" = "%d%% (%d/%d)";
+"stats.bestDateWithCount" = "%@ (%d)";
+"stats.bestWeekWithCount" = "%@ (%d)";
+"stats.noData" = "Sin datos todavia";
