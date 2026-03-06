@@ -16,14 +16,16 @@ struct BoardScreen: View {
                 CompactMonthCalendar(
                     selectedDate: $viewModel.selectedDate,
                     taskDates: taskDatesWithEntries,
+                    weeklyCompletedCount: weeklyCompletedCount,
+                    weeklyTotalCount: weeklyTasks.count,
+                    weeklyProgress: weeklyProgress,
+                    weeklyProgressPercent: weeklyProgressPercent,
                     onMonthTitleTap: {
                         showLargeCalendar = true
                     }
                 )
 
                 streakStickyCard
-
-                weeklyProgressCard
 
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
@@ -175,38 +177,6 @@ struct BoardScreen: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private var weeklyProgressCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(L10n.tr("board.weeklyProgress.title"))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppTheme.Colors.title)
-
-                Spacer()
-
-                Text("\(weeklyCompletedCount)/\(weeklyTasks.count)")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(AppTheme.Colors.accent)
-            }
-
-            ProgressView(value: weeklyProgress)
-                .tint(AppTheme.Colors.accent)
-
-            Text(
-                String(
-                    format: L10n.tr("board.weeklyProgress.detail"),
-                    weeklyProgressPercent
-                )
-            )
-            .font(.caption)
-            .foregroundStyle(AppTheme.Colors.subtitle)
-        }
-        .padding(14)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.medium, style: .continuous))
-        .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 4)
     }
 
     private var streakStickyCard: some View {

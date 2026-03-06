@@ -3,6 +3,10 @@ import SwiftUI
 struct CompactMonthCalendar: View {
     @Binding var selectedDate: Date
     let taskDates: Set<Date>
+    let weeklyCompletedCount: Int
+    let weeklyTotalCount: Int
+    let weeklyProgress: Double
+    let weeklyProgressPercent: Int
     let onMonthTitleTap: () -> Void
 
     private let weekdays = ["S", "M", "T", "W", "T", "F", "S"]
@@ -52,6 +56,32 @@ struct CompactMonthCalendar: View {
                     dayCell(date: date)
                 }
             }
+
+            Divider()
+                .overlay(AppTheme.Colors.subtitle.opacity(0.18))
+
+            HStack(alignment: .center, spacing: 10) {
+                Text(L10n.tr("board.weeklyProgress.title"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.Colors.subtitle)
+
+                ProgressView(value: weeklyProgress)
+                    .tint(AppTheme.Colors.accent)
+
+                Text("\(weeklyCompletedCount)/\(weeklyTotalCount)")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(AppTheme.Colors.accent)
+            }
+
+            Text(
+                String(
+                    format: L10n.tr("board.weeklyProgress.detail"),
+                    weeklyProgressPercent
+                )
+            )
+            .font(.caption2)
+            .foregroundStyle(AppTheme.Colors.subtitle)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
         .background(Color.white)
