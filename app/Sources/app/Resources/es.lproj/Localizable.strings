@@ -5,6 +5,8 @@
 "board.header.subtitle" = "Vamos a organizarnos";
 "board.header.streak" = "RACHA DE 7 DIAS";
 "board.newNote" = "NUEVA NOTA";
+"board.weeklyProgress.title" = "Progreso semanal";
+"board.weeklyProgress.detail" = "%d%% completado esta semana";
 
 "task.add.title" = "Nueva nota";
 "task.add.placeholder.title" = "Tarea";

@@ -20,6 +20,9 @@ struct BoardScreen: View {
                         showLargeCalendar = true
                     }
                 )
+
+                weeklyProgressCard
+
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(Array(viewModel.boardTasks.enumerated()), id: \.element.id) { index, task in
@@ -172,6 +175,38 @@ struct BoardScreen: View {
         .buttonStyle(.plain)
     }
 
+    private var weeklyProgressCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(L10n.tr("board.weeklyProgress.title"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.Colors.title)
+
+                Spacer()
+
+                Text("\(weeklyCompletedCount)/\(weeklyTasks.count)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.Colors.accent)
+            }
+
+            ProgressView(value: weeklyProgress)
+                .tint(AppTheme.Colors.accent)
+
+            Text(
+                String(
+                    format: L10n.tr("board.weeklyProgress.detail"),
+                    weeklyProgressPercent
+                )
+            )
+            .font(.caption)
+            .foregroundStyle(AppTheme.Colors.subtitle)
+        }
+        .padding(14)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.medium, style: .continuous))
+        .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 4)
+    }
+
     private func rotation(for index: Int) -> Double {
         index.isMultiple(of: 2) ? -1.4 : 1.1
     }
@@ -188,6 +223,33 @@ struct BoardScreen: View {
                 return Calendar.current.startOfDay(for: dueDate)
             }
         )
+    }
+
+    private var weeklyTasks: [BoardTask] {
+        viewModel.tasks.filter { task in
+            guard let dueDate = task.dueDate else { return false }
+            return isInSameWeek(dueDate, as: viewModel.selectedDate)
+        }
+    }
+
+    private var weeklyCompletedCount: Int {
+        weeklyTasks.filter(\.isCompleted).count
+    }
+
+    private var weeklyProgress: Double {
+        guard !weeklyTasks.isEmpty else { return 0 }
+        return Double(weeklyCompletedCount) / Double(weeklyTasks.count)
+    }
+
+    private var weeklyProgressPercent: Int {
+        Int((weeklyProgress * 100).rounded())
+    }
+
+    private func isInSameWeek(_ lhs: Date, as rhs: Date) -> Bool {
+        let calendar = Calendar.current
+        let left = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: lhs)
+        let right = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: rhs)
+        return left.weekOfYear == right.weekOfYear && left.yearForWeekOfYear == right.yearForWeekOfYear
     }
 
     private func notifyScreenState() {

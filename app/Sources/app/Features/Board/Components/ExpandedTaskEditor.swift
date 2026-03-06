@@ -105,6 +105,11 @@ struct ExpandedTaskEditor: View {
                                     .fill(item.color)
                                     .frame(width: 26, height: 26)
                                     .overlay {
+                                        Image(systemName: item.icon)
+                                            .font(.caption2.weight(.bold))
+                                            .foregroundStyle(AppTheme.Colors.title.opacity(0.75))
+                                    }
+                                    .overlay {
                                         Circle()
                                             .stroke(AppTheme.Colors.accent, lineWidth: category == item ? 2 : 0)
                                     }

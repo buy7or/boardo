@@ -145,7 +145,6 @@ struct AddTaskSheet: View {
                                                     dash: [5]
                                                 )
                                             )
-                                            .padding(-4)
                                     }
 
                                 Text(category.label)
@@ -157,6 +156,8 @@ struct AddTaskSheet: View {
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
             }
         }
     }

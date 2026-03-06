@@ -5,6 +5,8 @@
 "board.header.subtitle" = "Let's get organized";
 "board.header.streak" = "7 DAY STREAK";
 "board.newNote" = "NEW NOTE";
+"board.weeklyProgress.title" = "Weekly progress";
+"board.weeklyProgress.detail" = "%d%% completed this week";
 
 "task.add.title" = "New Memory";
 "task.add.placeholder.title" = "Task";

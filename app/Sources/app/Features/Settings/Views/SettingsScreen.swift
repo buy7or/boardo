@@ -51,8 +51,6 @@ struct SettingsScreen: View {
     var body: some View {
         BoardSurface {
             VStack(spacing: 20) {
-                Spacer(minLength: 0)
-
                 VStack(spacing: 12) {
                     Text(tr("settings.title"))
                         .font(.largeTitle.weight(.bold))
