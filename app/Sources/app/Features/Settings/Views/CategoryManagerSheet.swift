@@ -76,15 +76,18 @@ struct CategoryManagerSheet: View {
                         } label: {
                             Circle()
                                 .fill(colorStyle.color)
-                                .frame(width: 32, height: 32)
-                                .overlay {
-                                    Circle()
-                                        .stroke(AppTheme.Colors.accent, lineWidth: selectedColor == colorStyle ? 2 : 0)
-                                }
-                        }
-                        .buttonStyle(.plain)
+                            .frame(width: 32, height: 32)
+                            .overlay {
+                                Circle()
+                                    .inset(by: 0.8)
+                                    .stroke(AppTheme.Colors.accent, lineWidth: selectedColor == colorStyle ? 2 : 0)
+                            }
                     }
+                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
+            }
             }
 
             Text(L10n.tr("settings.categories.icon"))
@@ -106,12 +109,14 @@ struct CategoryManagerSheet: View {
                                 }
                                 .overlay {
                                     Circle()
+                                        .inset(by: 0.8)
                                         .stroke(AppTheme.Colors.accent, lineWidth: selectedIcon == iconName ? 2 : 0)
                                 }
                         }
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 4)
                 .padding(.vertical, 2)
             }
 
