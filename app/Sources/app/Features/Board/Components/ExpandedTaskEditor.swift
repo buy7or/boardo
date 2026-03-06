@@ -96,27 +96,42 @@ struct ExpandedTaskEditor: View {
                 }
 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 16) {
                         ForEach(categories) { item in
                             Button {
                                 category = item
                             } label: {
-                                Circle()
-                                    .fill(item.color)
-                                    .frame(width: 26, height: 26)
-                                    .overlay {
-                                        Image(systemName: item.icon)
-                                            .font(.caption2.weight(.bold))
-                                            .foregroundStyle(AppTheme.Colors.title.opacity(0.75))
-                                    }
-                                    .overlay {
-                                        Circle()
-                                            .stroke(AppTheme.Colors.accent, lineWidth: category == item ? 2 : 0)
-                                    }
+                                VStack(spacing: 7) {
+                                    Circle()
+                                        .fill(item.color)
+                                        .frame(width: 42, height: 42)
+                                        .overlay {
+                                            Image(systemName: item.icon)
+                                                .font(.caption.weight(.bold))
+                                                .foregroundStyle(AppTheme.Colors.title.opacity(0.7))
+                                        }
+                                        .overlay {
+                                            Circle()
+                                                .stroke(
+                                                    AppTheme.Colors.accent,
+                                                    style: StrokeStyle(
+                                                        lineWidth: category == item ? 1.8 : 0,
+                                                        dash: [5]
+                                                    )
+                                                )
+                                        }
+
+                                    Text(item.label)
+                                        .font(.caption2)
+                                        .foregroundStyle(AppTheme.Colors.subtitle)
+                                        .lineLimit(1)
+                                }
                             }
                             .buttonStyle(.plain)
                         }
                     }
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
                 }
 
                 Text(L10n.tr("task.edit.finishedQuestion"))
