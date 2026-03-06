@@ -40,9 +40,15 @@ struct CategoryManagerSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cerrar") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(AppTheme.Colors.subtitle)
+                            .frame(width: 28, height: 28)
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
