@@ -36,7 +36,7 @@ struct CategoryManagerSheet: View {
                 .padding(16)
             }
             .background(AppTheme.Colors.boardBackground.ignoresSafeArea())
-            .navigationTitle("Categorias")
+            .navigationTitle(L10n.tr("settings.categories.navTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -56,15 +56,15 @@ struct CategoryManagerSheet: View {
 
     private var formCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Crear categoria")
+            Text(L10n.tr("settings.categories.create"))
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(AppTheme.Colors.title)
 
-            TextField("Nombre", text: $categoryName)
+            TextField(L10n.tr("settings.categories.name"), text: $categoryName)
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.words)
 
-            Text("Color del post-it")
+            Text(L10n.tr("settings.categories.color"))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(AppTheme.Colors.subtitle)
 
@@ -85,7 +85,7 @@ struct CategoryManagerSheet: View {
                 }
             }
 
-            Text("Icono")
+            Text(L10n.tr("settings.categories.icon"))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(AppTheme.Colors.subtitle)
 
@@ -113,7 +113,7 @@ struct CategoryManagerSheet: View {
                 .padding(.vertical, 2)
             }
 
-            Button("Agregar categoria") {
+            Button(L10n.tr("settings.categories.add")) {
                 viewModel.addCategory(name: categoryName, colorStyle: selectedColor, icon: selectedIcon)
                 categoryName = ""
                 selectedColor = .yellow
@@ -135,7 +135,7 @@ struct CategoryManagerSheet: View {
 
     private var categoriesList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Categorias disponibles")
+            Text(L10n.tr("settings.categories.available"))
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(AppTheme.Colors.title)
 
@@ -162,6 +162,7 @@ struct CategoryManagerSheet: View {
                             Image(systemName: "trash")
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(L10n.tr("common.delete"))
                     }
                 }
                 .padding(12)
