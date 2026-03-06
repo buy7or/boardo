@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StatsScreen: View {
     @Bindable var viewModel: BoardViewModel
+    @AppStorage(L10n.languagePreferenceKey) private var selectedLanguageCode = L10n.defaultSupportedLanguageCode()
 
     var body: some View {
         BoardSurface {
@@ -9,37 +10,37 @@ struct StatsScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     header
                     metricCard(
-                        title: L10n.tr("stats.currentStreak"),
-                        value: String(format: L10n.tr("stats.daysValue"), currentStreak),
+                        title: tr("stats.currentStreak"),
+                        value: String(format: tr("stats.daysValue"), currentStreak),
                         color: AppTheme.Colors.stickyYellow,
                         icon: "flame"
                     )
                     metricCard(
-                        title: L10n.tr("stats.longestStreak"),
-                        value: String(format: L10n.tr("stats.daysValue"), longestStreak),
+                        title: tr("stats.longestStreak"),
+                        value: String(format: tr("stats.daysValue"), longestStreak),
                         color: AppTheme.Colors.stickyPink,
                         icon: "flame.fill"
                     )
                     metricCard(
-                        title: L10n.tr("stats.completedTasks"),
+                        title: tr("stats.completedTasks"),
                         value: "\(completedTasksCount)",
                         color: AppTheme.Colors.stickyMint,
                         icon: "checkmark.circle"
                     )
                     metricCard(
-                        title: L10n.tr("stats.completionRate"),
+                        title: tr("stats.completionRate"),
                         value: completionRateText,
                         color: AppTheme.Colors.stickyBlue,
                         icon: "chart.pie"
                     )
                     metricCard(
-                        title: L10n.tr("stats.bestDay"),
+                        title: tr("stats.bestDay"),
                         value: bestDayText,
                         color: AppTheme.Colors.stickyYellow.opacity(0.9),
                         icon: "calendar"
                     )
                     metricCard(
-                        title: L10n.tr("stats.bestWeek"),
+                        title: tr("stats.bestWeek"),
                         value: bestWeekText,
                         color: AppTheme.Colors.stickyPink.opacity(0.88),
                         icon: "calendar.badge.clock"
@@ -54,10 +55,10 @@ struct StatsScreen: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.tr("stats.title"))
+            Text(tr("stats.title"))
                 .font(.largeTitle.weight(.bold))
                 .foregroundStyle(AppTheme.Colors.title)
-            Text(L10n.tr("stats.subtitle"))
+            Text(tr("stats.subtitle"))
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.Colors.subtitle)
         }
@@ -102,11 +103,11 @@ struct StatsScreen: View {
 
     private var completionRateText: String {
         guard !viewModel.tasks.isEmpty else {
-            return String(format: L10n.tr("stats.percentWithCount"), 0, 0, 0)
+            return String(format: tr("stats.percentWithCount"), 0, 0, 0)
         }
 
         let percent = Int((Double(completedTasksCount) / Double(viewModel.tasks.count) * 100).rounded())
-        return String(format: L10n.tr("stats.percentWithCount"), percent, completedTasksCount, viewModel.tasks.count)
+        return String(format: tr("stats.percentWithCount"), percent, completedTasksCount, viewModel.tasks.count)
     }
 
     private var currentStreak: Int {
@@ -161,20 +162,20 @@ struct StatsScreen: View {
         }
 
         guard let best = grouped.max(by: { lhs, rhs in lhs.value.count < rhs.value.count }) else {
-            return L10n.tr("stats.noData")
+            return tr("stats.noData")
         }
 
         let formatter = DateFormatter()
-        formatter.locale = L10n.currentLocale()
+        formatter.locale = L10n.currentLocale(languageCode: selectedLanguageCode)
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return String(format: L10n.tr("stats.bestDateWithCount"), formatter.string(from: best.key), best.value.count)
+        return String(format: tr("stats.bestDateWithCount"), formatter.string(from: best.key), best.value.count)
     }
 
     private var bestWeekText: String {
         let calendar = Calendar.current
         let tasks = viewModel.tasks.filter { $0.isCompleted && $0.dueDate != nil }
-        guard !tasks.isEmpty else { return L10n.tr("stats.noData") }
+        guard !tasks.isEmpty else { return tr("stats.noData") }
 
         struct WeekKey: Hashable {
             let weekOfYear: Int
@@ -190,7 +191,7 @@ struct StatsScreen: View {
         }
 
         guard let best = grouped.max(by: { lhs, rhs in lhs.value.count < rhs.value.count }) else {
-            return L10n.tr("stats.noData")
+            return tr("stats.noData")
         }
 
         var weekComponents = DateComponents()
@@ -200,15 +201,19 @@ struct StatsScreen: View {
 
         guard let weekStart = calendar.date(from: weekComponents),
               let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) else {
-            return L10n.tr("stats.noData")
+            return tr("stats.noData")
         }
 
         let formatter = DateIntervalFormatter()
-        formatter.locale = L10n.currentLocale()
+        formatter.locale = L10n.currentLocale(languageCode: selectedLanguageCode)
         formatter.dateStyle = .short
         formatter.timeStyle = .none
 
         let range = formatter.string(from: weekStart, to: weekEnd)
-        return String(format: L10n.tr("stats.bestWeekWithCount"), range, best.value.count)
+        return String(format: tr("stats.bestWeekWithCount"), range, best.value.count)
+    }
+
+    private func tr(_ key: String) -> String {
+        L10n.tr(key, languageCode: selectedLanguageCode)
     }
 }
