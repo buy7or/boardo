@@ -68,20 +68,22 @@ struct CategoryManagerSheet: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(AppTheme.Colors.subtitle)
 
-            HStack(spacing: 10) {
-                ForEach(PostItColorStyle.allCases) { colorStyle in
-                    Button {
-                        selectedColor = colorStyle
-                    } label: {
-                        Circle()
-                            .fill(colorStyle.color)
-                            .frame(width: 32, height: 32)
-                            .overlay {
-                                Circle()
-                                    .stroke(AppTheme.Colors.accent, lineWidth: selectedColor == colorStyle ? 2 : 0)
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(PostItColorStyle.allCases) { colorStyle in
+                        Button {
+                            selectedColor = colorStyle
+                        } label: {
+                            Circle()
+                                .fill(colorStyle.color)
+                                .frame(width: 32, height: 32)
+                                .overlay {
+                                    Circle()
+                                        .stroke(AppTheme.Colors.accent, lineWidth: selectedColor == colorStyle ? 2 : 0)
+                                }
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
 

@@ -5,6 +5,12 @@ enum PostItColorStyle: String, CaseIterable, Identifiable, Codable {
     case blue
     case pink
     case mint
+    case orange
+    case lilac
+    case coral
+    case sage
+    case peach
+    case gray
 
     var id: String { rawValue }
 
@@ -14,6 +20,12 @@ enum PostItColorStyle: String, CaseIterable, Identifiable, Codable {
         case .blue: return AppTheme.Colors.stickyBlue
         case .pink: return AppTheme.Colors.stickyPink
         case .mint: return AppTheme.Colors.stickyMint
+        case .orange: return AppTheme.Colors.stickyOrange
+        case .lilac: return AppTheme.Colors.stickyLilac
+        case .coral: return AppTheme.Colors.stickyCoral
+        case .sage: return AppTheme.Colors.stickySage
+        case .peach: return AppTheme.Colors.stickyPeach
+        case .gray: return AppTheme.Colors.stickyGray
         }
     }
 }

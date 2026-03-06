@@ -12,6 +12,12 @@ enum AppTheme {
         static let stickyBlue = Color(red: 0.73, green: 0.82, blue: 0.96)
         static let stickyPink = Color(red: 0.95, green: 0.78, blue: 0.88)
         static let stickyMint = Color(red: 0.72, green: 0.90, blue: 0.80)
+        static let stickyOrange = Color(red: 0.99, green: 0.79, blue: 0.53)
+        static let stickyLilac = Color(red: 0.85, green: 0.80, blue: 0.95)
+        static let stickyCoral = Color(red: 0.98, green: 0.73, blue: 0.66)
+        static let stickySage = Color(red: 0.75, green: 0.86, blue: 0.74)
+        static let stickyPeach = Color(red: 0.99, green: 0.86, blue: 0.74)
+        static let stickyGray = Color(red: 0.83, green: 0.85, blue: 0.88)
     }
 
     enum Radius {
