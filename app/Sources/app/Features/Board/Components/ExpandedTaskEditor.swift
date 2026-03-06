@@ -56,11 +56,11 @@ struct ExpandedTaskEditor: View {
                         .offset(y: -10)
 
                     VStack(alignment: .leading, spacing: 18) {
-                        Text("DUE TODAY")
+                        Text(L10n.tr("task.edit.dueToday"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(AppTheme.Colors.accent)
 
-                        TextField("Task", text: $title, axis: .vertical)
+                        TextField(L10n.tr("task.edit.placeholder.title"), text: $title, axis: .vertical)
                             .font(AppTheme.Typography.stickyTitle)
                             .foregroundStyle(Color.black.opacity(0.9))
                             .lineLimit(1...3)
@@ -76,7 +76,7 @@ struct ExpandedTaskEditor: View {
 
                         HStack(spacing: 6) {
                             Image(systemName: "paperclip")
-                            Text("attachment")
+                            Text(L10n.tr("task.edit.attachment"))
                                 .italic()
                         }
                         .font(.caption)
@@ -114,14 +114,14 @@ struct ExpandedTaskEditor: View {
                     }
                 }
 
-                Text("FINISHED WITH THIS?")
+                Text(L10n.tr("task.edit.finishedQuestion"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(AppTheme.Colors.subtitle)
 
                 Button {
                     onToggleDone()
                 } label: {
-                    Label(task.isCompleted ? "Mark as Pending" : "Complete Task", systemImage: "checkmark.circle")
+                    Label(task.isCompleted ? L10n.tr("task.edit.markPending") : L10n.tr("task.edit.complete"), systemImage: "checkmark.circle")
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -132,13 +132,13 @@ struct ExpandedTaskEditor: View {
                 }
 
                 HStack(spacing: 14) {
-                    Button("Delete") {
+                    Button(L10n.tr("common.delete")) {
                         onDelete()
                     }
                     .font(.subheadline)
                     .foregroundStyle(.red)
 
-                    Button("Save changes") {
+                    Button(L10n.tr("common.saveChanges")) {
                         onSave(title, notes, category)
                     }
                     .font(.subheadline.weight(.semibold))

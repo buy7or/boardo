@@ -159,7 +159,7 @@ struct BoardScreen: View {
                     .background(AppTheme.Colors.accent)
                     .clipShape(Circle())
                     .shadow(color: AppTheme.Shadow.card, radius: 6, x: 0, y: 4)
-                Text("NEW NOTE")
+                Text(L10n.tr("board.newNote"))
                     .font(AppTheme.Typography.stickyTag)
                     .foregroundStyle(AppTheme.Colors.subtitle)
             }

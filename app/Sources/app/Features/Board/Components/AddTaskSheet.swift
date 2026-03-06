@@ -45,7 +45,7 @@ struct AddTaskSheet: View {
 
     private var topBar: some View {
         ZStack {
-            Text("New Memory")
+            Text(L10n.tr("task.add.title"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(AppTheme.Colors.accent)
 
@@ -67,7 +67,7 @@ struct AddTaskSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             ZStack(alignment: .leading) {
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text("Task")
+                    Text(L10n.tr("task.add.placeholder.title"))
                         .font(handwrittenTitleFont)
                         .foregroundStyle(Color.black.opacity(0.9))
                 }
@@ -81,7 +81,7 @@ struct AddTaskSheet: View {
 
             ZStack(alignment: .topLeading) {
                 if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text("Description")
+                    Text(L10n.tr("task.add.placeholder.notes"))
                         .font(handwrittenBodyFont)
                         .foregroundStyle(Color.black.opacity(0.42))
                         .padding(.top, 8)
@@ -117,7 +117,7 @@ struct AddTaskSheet: View {
 
     private var stickerPicker: some View {
         VStack(spacing: 10) {
-            Text("Pick a Sticker")
+            Text(L10n.tr("task.add.pickSticker"))
                 .font(.headline)
                 .foregroundStyle(AppTheme.Colors.subtitle)
 
@@ -166,7 +166,7 @@ struct AddTaskSheet: View {
             onSave(title, notes, selectedCategory, selectedDate)
             dismiss()
         } label: {
-            Label("Pin to Board", systemImage: "pin.fill")
+            Label(L10n.tr("task.add.pin"), systemImage: "pin.fill")
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.vertical, 14)
