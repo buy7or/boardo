@@ -113,18 +113,23 @@ struct CategoryManagerSheet: View {
                 .padding(.vertical, 2)
             }
 
-            Button(L10n.tr("settings.categories.add")) {
+            Button {
                 viewModel.addCategory(name: categoryName, colorStyle: selectedColor, icon: selectedIcon)
                 categoryName = ""
                 selectedColor = .yellow
                 selectedIcon = "tag.fill"
             }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(AppTheme.Colors.accent)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            label: {
+                Text(L10n.tr("settings.categories.add"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(AppTheme.Colors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             .disabled(categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .opacity(categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.7 : 1)
         }

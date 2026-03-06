@@ -29,7 +29,7 @@ struct NotificationScheduler {
     func scheduleDailyNotification(hour: Int, minute: Int) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Boardo"
-        content.body = "Revisa tus tareas de hoy para mantener el ritmo."
+        content.body = L10n.tr("notification.daily.body")
         content.sound = .default
 
         var dateComponents = DateComponents()

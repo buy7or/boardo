@@ -116,6 +116,11 @@ struct SettingsScreen: View {
                 .shadow(color: AppTheme.Shadow.card, radius: 10, x: 0, y: 6)
                 .onChange(of: selectedLanguageCode) { _, newValue in
                     UserDefaults.standard.set(newValue, forKey: L10n.languagePreferenceKey)
+
+                    guard dailyNotificationsEnabled else { return }
+                    Task {
+                        await scheduleDailyNotificationIfPossible()
+                    }
                 }
 
                 Button {
