@@ -22,7 +22,7 @@ final class BoardViewModel {
         if let tasks {
             initialTasks = tasks
         } else {
-            initialTasks = store.loadTasks() ?? BoardMockData.sampleTasks()
+            initialTasks = store.loadTasks() ?? []
         }
 
         var hasCategoryChanges = false
