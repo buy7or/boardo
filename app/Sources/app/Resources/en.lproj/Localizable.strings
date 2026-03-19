@@ -10,6 +10,8 @@
 "board.streak.title" = "Daily streak";
 "board.streak.days" = "%d-day streak";
 "board.streak.motivation" = "Do it today. Keep the streak alive.";
+"board.achievement.unlocked" = "Achievement unlocked";
+"board.achievement.keepGoing" = "Keep it going";
 "board.weeklyProgress.title" = "Weekly progress";
 "board.weeklyProgress.detail" = "%d%% completed this week";
 

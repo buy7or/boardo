@@ -8,6 +8,8 @@ struct BoardScreen: View {
     @State private var showAddTaskSheet = false
     @State private var showLargeCalendar = false
     @State private var expandedTaskID: UUID?
+    @State private var unlockedAchievement: AchievementID?
+    @State private var isAchievementBadgeAnimating = false
     private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
     var body: some View {
@@ -34,9 +36,7 @@ struct BoardScreen: View {
                                 if !task.isCompleted {
                                     CompletionFeedbackPlayer.play()
                                 }
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-                                    viewModel.toggleCompletion(taskID: task.id)
-                                }
+                                handleCompletionToggle(taskID: task.id, wasCompleted: task.isCompleted)
                             } onOpen: {
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                                     expandedTaskID = task.id
@@ -123,9 +123,7 @@ struct BoardScreen: View {
                         if !task.isCompleted {
                             CompletionFeedbackPlayer.play()
                         }
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-                            viewModel.toggleCompletion(taskID: task.id)
-                        }
+                        handleCompletionToggle(taskID: task.id, wasCompleted: task.isCompleted)
                     },
                     onDelete: {
                         viewModel.deleteTask(taskID: task.id)
@@ -136,6 +134,11 @@ struct BoardScreen: View {
                 )
                 .padding(.horizontal, 16)
                 .transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
+        .overlay(alignment: .top) {
+            if let unlockedAchievement {
+                achievementUnlockedOverlay(for: unlockedAchievement)
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: expandedTaskID)
@@ -290,6 +293,119 @@ struct BoardScreen: View {
 
     private var shouldShowStreakMotivation: Bool {
         dailyStreakCount > 0 && !hasCompletedTaskToday
+    }
+
+    private func handleCompletionToggle(taskID: UUID, wasCompleted: Bool) {
+        if wasCompleted {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                viewModel.toggleCompletion(taskID: taskID)
+            }
+            return
+        }
+
+        let unlockedBefore = viewModel.unlockedAchievementIDs()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+            viewModel.toggleCompletion(taskID: taskID)
+        }
+        let unlockedAfter = viewModel.unlockedAchievementIDs()
+        let newUnlocks = viewModel.newlyUnlockedAchievementIDs(before: unlockedBefore, after: unlockedAfter)
+
+        guard let firstUnlocked = newUnlocks.first else { return }
+        showAchievementCelebration(firstUnlocked)
+    }
+
+    private func showAchievementCelebration(_ achievementID: AchievementID) {
+        unlockedAchievement = achievementID
+        isAchievementBadgeAnimating = false
+
+        withAnimation(.spring(response: 0.56, dampingFraction: 0.72)) {
+            isAchievementBadgeAnimating = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
+                unlockedAchievement = nil
+                isAchievementBadgeAnimating = false
+            }
+        }
+    }
+
+    private func achievementUnlockedOverlay(for achievementID: AchievementID) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.78))
+                    .frame(width: 60, height: 60)
+                Image(systemName: achievementSymbol(for: achievementID))
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(AppTheme.Colors.accent)
+                    .rotationEffect(.degrees(isAchievementBadgeAnimating ? 360 : 0))
+                    .scaleEffect(isAchievementBadgeAnimating ? 1 : 0.28)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.tr("board.achievement.unlocked"))
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.Colors.subtitle)
+                Text(achievementTitle(for: achievementID))
+                    .font(AppTheme.Typography.stickyCardBody)
+                    .foregroundStyle(AppTheme.Colors.title)
+                    .lineLimit(1)
+                Text(L10n.tr("board.achievement.keepGoing"))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppTheme.Colors.title.opacity(0.75))
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(AppTheme.Colors.stickyYellow)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.white.opacity(0.4))
+                .frame(width: 64, height: 12)
+                .offset(y: -6)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.medium, style: .continuous))
+        .shadow(color: AppTheme.Shadow.card, radius: 10, x: 0, y: 6)
+        .padding(.horizontal, 22)
+        .padding(.top, 10)
+        .transition(.move(edge: .top).combined(with: .opacity).combined(with: .scale(scale: 0.86)))
+    }
+
+    private func achievementTitle(for id: AchievementID) -> String {
+        switch id {
+        case .firstStep:
+            return L10n.tr("achievements.firstStep.title")
+        case .onTrack:
+            return L10n.tr("achievements.onTrack.title")
+        case .consistent:
+            return L10n.tr("achievements.consistent.title")
+        case .unstoppable:
+            return L10n.tr("achievements.unstoppable.title")
+        case .solidWeek:
+            return L10n.tr("achievements.solidWeek.title")
+        case .organized:
+            return L10n.tr("achievements.organized.title")
+        }
+    }
+
+    private func achievementSymbol(for id: AchievementID) -> String {
+        switch id {
+        case .firstStep:
+            return "star.fill"
+        case .onTrack:
+            return "flag.fill"
+        case .consistent:
+            return "flame.fill"
+        case .unstoppable:
+            return "bolt.fill"
+        case .solidWeek:
+            return "chart.bar.fill"
+        case .organized:
+            return "tray.full.fill"
+        }
     }
 
     private func notifyScreenState() {

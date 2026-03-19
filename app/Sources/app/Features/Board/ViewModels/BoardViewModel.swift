@@ -1,6 +1,21 @@
 import Foundation
 import Observation
 
+enum AchievementID: String, CaseIterable, Hashable {
+    case firstStep
+    case onTrack
+    case consistent
+    case unstoppable
+    case solidWeek
+    case organized
+}
+
+struct AchievementMetric: Identifiable {
+    let id: AchievementID
+    let current: Int
+    let target: Int
+}
+
 @Observable
 final class BoardViewModel {
     var selectedDate: Date = Date()
@@ -112,6 +127,25 @@ final class BoardViewModel {
         return longest
     }
 
+    func achievementMetrics(referenceDate: Date = Date()) -> [AchievementMetric] {
+        [
+            AchievementMetric(id: .firstStep, current: min(completedTasksCount, 1), target: 1),
+            AchievementMetric(id: .onTrack, current: min(completedTasksCount, 10), target: 10),
+            AchievementMetric(id: .consistent, current: min(currentStreak(referenceDate: referenceDate), 3), target: 3),
+            AchievementMetric(id: .unstoppable, current: min(currentStreak(referenceDate: referenceDate), 7), target: 7),
+            AchievementMetric(id: .solidWeek, current: min(weeklyCompletionPercent(referenceDate: referenceDate), 80), target: 80),
+            AchievementMetric(id: .organized, current: min(tasks.count, 25), target: 25),
+        ]
+    }
+
+    func unlockedAchievementIDs(referenceDate: Date = Date()) -> Set<AchievementID> {
+        Set(achievementMetrics(referenceDate: referenceDate).filter { $0.current >= $0.target }.map(\.id))
+    }
+
+    func newlyUnlockedAchievementIDs(before: Set<AchievementID>, after: Set<AchievementID>) -> [AchievementID] {
+        AchievementID.allCases.filter { after.contains($0) && !before.contains($0) }
+    }
+
     func toggleCompletion(taskID: UUID) {
         guard let index = tasks.firstIndex(where: { $0.id == taskID }) else { return }
         tasks[index].isCompleted.toggle()
@@ -185,6 +219,23 @@ final class BoardViewModel {
 
     private func persist() {
         store.saveTasks(tasks)
+    }
+
+    private var completedTasksCount: Int {
+        tasks.filter(\.isCompleted).count
+    }
+
+    private func weeklyCompletionPercent(referenceDate: Date) -> Int {
+        let calendar = Calendar.current
+        let weekTasks = tasks.filter { task in
+            guard let dueDate = task.dueDate else { return false }
+            let left = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: dueDate)
+            let right = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: referenceDate)
+            return left.weekOfYear == right.weekOfYear && left.yearForWeekOfYear == right.yearForWeekOfYear
+        }
+        guard !weekTasks.isEmpty else { return 0 }
+        let ratio = Double(weekTasks.filter(\.isCompleted).count) / Double(weekTasks.count)
+        return Int((ratio * 100).rounded())
     }
 
     private var completedDays: Set<Date> {
