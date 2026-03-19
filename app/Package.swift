@@ -13,7 +13,7 @@ let package = Package(
         // An xtool project should contain exactly one library product,
         // representing the main app.
         .library(
-            name: "app",
+            name: "Boardo",
             targets: ["app"]
         ),
     ],
