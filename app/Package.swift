@@ -14,12 +14,13 @@ let package = Package(
         // representing the main app.
         .library(
             name: "Boardo",
-            targets: ["app"]
+            targets: ["Boardo"]
         ),
     ],
     targets: [
         .target(
-            name: "app"
+            name: "Boardo",
+            path: "Sources/app"
         ),
     ]
 )
