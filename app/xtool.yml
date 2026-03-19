@@ -1,4 +1,4 @@
 version: 1
 name: Boardo
-bundleID: com.example.app
+bundleID: com.beedev.boardo
 iconPath: Assets/AppIcon/icon.png
