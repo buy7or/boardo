@@ -186,7 +186,7 @@ struct BoardScreen: View {
                     .stroke(AppTheme.Colors.accent.opacity(0.65), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
                     .frame(width: 38, height: 38)
 
-                Image(systemName: "flame")
+                Image(systemName: dailyStreakCount > 0 ? "flame.fill" : "flame")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(AppTheme.Colors.accent)
             }
