@@ -111,48 +111,11 @@ struct StatsScreen: View {
     }
 
     private var currentStreak: Int {
-        streakValues.current
+        viewModel.currentStreak()
     }
 
     private var longestStreak: Int {
-        streakValues.longest
-    }
-
-    private var streakValues: (current: Int, longest: Int) {
-        let calendar = Calendar.current
-        let completedDays = Set(
-            viewModel.tasks.compactMap { task -> Date? in
-                guard task.isCompleted, let dueDate = task.dueDate else { return nil }
-                return calendar.startOfDay(for: dueDate)
-            }
-        )
-        guard !completedDays.isEmpty else { return (0, 0) }
-
-        let sortedDays = completedDays.sorted()
-        var longest = 1
-        var running = 1
-
-        for index in 1..<sortedDays.count {
-            let previous = sortedDays[index - 1]
-            let current = sortedDays[index]
-            if let expected = calendar.date(byAdding: .day, value: 1, to: previous),
-               calendar.isDate(expected, inSameDayAs: current) {
-                running += 1
-            } else {
-                running = 1
-            }
-            longest = max(longest, running)
-        }
-
-        var current = 0
-        var day = calendar.startOfDay(for: Date())
-        while completedDays.contains(day) {
-            current += 1
-            guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
-            day = previous
-        }
-
-        return (current, longest)
+        viewModel.longestStreak()
     }
 
     private var bestDayText: String {

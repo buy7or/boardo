@@ -62,6 +62,56 @@ final class BoardViewModel {
         tasks.filter { $0.dueDate == nil }
     }
 
+    func currentStreak(referenceDate: Date = Date()) -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: referenceDate)
+        var anchorDay = today
+
+        if !completedDays.contains(today) {
+            guard
+                let yesterday = calendar.date(byAdding: .day, value: -1, to: today),
+                completedDays.contains(yesterday)
+            else {
+                return 0
+            }
+            anchorDay = yesterday
+        }
+
+        var streak = 0
+        var day = anchorDay
+
+        while completedDays.contains(day) {
+            streak += 1
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previousDay
+        }
+
+        return streak
+    }
+
+    func longestStreak() -> Int {
+        let calendar = Calendar.current
+        let sortedDays = completedDays.sorted()
+        guard !sortedDays.isEmpty else { return 0 }
+
+        var longest = 1
+        var running = 1
+
+        for index in 1..<sortedDays.count {
+            let previous = sortedDays[index - 1]
+            let current = sortedDays[index]
+            if let expected = calendar.date(byAdding: .day, value: 1, to: previous),
+               calendar.isDate(expected, inSameDayAs: current) {
+                running += 1
+            } else {
+                running = 1
+            }
+            longest = max(longest, running)
+        }
+
+        return longest
+    }
+
     func toggleCompletion(taskID: UUID) {
         guard let index = tasks.firstIndex(where: { $0.id == taskID }) else { return }
         tasks[index].isCompleted.toggle()
@@ -135,6 +185,16 @@ final class BoardViewModel {
 
     private func persist() {
         store.saveTasks(tasks)
+    }
+
+    private var completedDays: Set<Date> {
+        let calendar = Calendar.current
+        return Set(
+            tasks.compactMap { task in
+                guard task.isCompleted, let dueDate = task.dueDate else { return nil }
+                return calendar.startOfDay(for: dueDate)
+            }
+        )
     }
 
     private func normalizedCategory(for category: TaskCategory, didChange: inout Bool) -> TaskCategory {

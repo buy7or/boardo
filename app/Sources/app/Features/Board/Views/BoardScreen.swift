@@ -270,24 +270,7 @@ struct BoardScreen: View {
     }
 
     private var dailyStreakCount: Int {
-        let calendar = Calendar.current
-        let completedDays = Set(
-            viewModel.tasks.compactMap { task -> Date? in
-                guard task.isCompleted, let dueDate = task.dueDate else { return nil }
-                return calendar.startOfDay(for: dueDate)
-            }
-        )
-
-        var streak = 0
-        var currentDay = calendar.startOfDay(for: Date())
-
-        while completedDays.contains(currentDay) {
-            streak += 1
-            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDay) else { break }
-            currentDay = previousDay
-        }
-
-        return streak
+        viewModel.currentStreak()
     }
 
     private func notifyScreenState() {
