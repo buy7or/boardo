@@ -90,3 +90,15 @@
 "achievements.solidWeek.description" = "Reach 80%% weekly progress.";
 "achievements.organized.title" = "Organized";
 "achievements.organized.description" = "Create 25 tasks.";
+"achievements.taskMaster.title" = "Task master";
+"achievements.taskMaster.description" = "Complete 25 tasks.";
+"achievements.marathoner.title" = "Marathoner";
+"achievements.marathoner.description" = "Complete 50 tasks.";
+"achievements.momentum.title" = "Steady momentum";
+"achievements.momentum.description" = "Keep a 14-day streak.";
+"achievements.legend.title" = "Legend";
+"achievements.legend.description" = "Keep a 30-day streak.";
+"achievements.perfectWeek.title" = "Perfect week";
+"achievements.perfectWeek.description" = "Reach 100%% weekly progress.";
+"achievements.dailyFocus.title" = "Daily focus";
+"achievements.dailyFocus.description" = "Complete 3 tasks due today in one day.";

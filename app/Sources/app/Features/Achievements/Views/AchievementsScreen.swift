@@ -110,71 +110,119 @@ struct AchievementsScreen: View {
         .shadow(color: AppTheme.Shadow.card, radius: 10, x: 0, y: 5)
     }
 
-    private var completedTasksCount: Int {
-        viewModel.tasks.filter(\.isCompleted).count
-    }
-
-    private var weeklyCompletionPercent: Int {
-        let calendar = Calendar.current
-        let weekTasks = viewModel.tasks.filter { task in
-            guard let dueDate = task.dueDate else { return false }
-            let left = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: dueDate)
-            let right = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: viewModel.selectedDate)
-            return left.weekOfYear == right.weekOfYear && left.yearForWeekOfYear == right.yearForWeekOfYear
-        }
-        guard !weekTasks.isEmpty else { return 0 }
-        let ratio = Double(weekTasks.filter(\.isCompleted).count) / Double(weekTasks.count)
-        return Int((ratio * 100).rounded())
-    }
-
     private var achievementItems: [AchievementItem] {
-        [
+        let metrics = Dictionary(uniqueKeysWithValues: viewModel.achievementMetrics().map { ($0.id, $0) })
+        func metric(for id: AchievementID) -> AchievementMetric {
+            metrics[id] ?? AchievementMetric(id: id, current: 0, target: 1)
+        }
+
+        return [
             AchievementItem(
+                id: .firstStep,
                 title: tr("achievements.firstStep.title"),
                 description: tr("achievements.firstStep.description"),
-                current: min(completedTasksCount, 1),
-                target: 1,
+                current: metric(for: .firstStep).current,
+                target: metric(for: .firstStep).target,
                 symbol: "star.fill",
                 color: AppTheme.Colors.stickyYellow
             ),
             AchievementItem(
+                id: .onTrack,
                 title: tr("achievements.onTrack.title"),
                 description: tr("achievements.onTrack.description"),
-                current: min(completedTasksCount, 10),
-                target: 10,
+                current: metric(for: .onTrack).current,
+                target: metric(for: .onTrack).target,
                 symbol: "flag.fill",
                 color: AppTheme.Colors.stickyBlue
             ),
             AchievementItem(
+                id: .consistent,
                 title: tr("achievements.consistent.title"),
                 description: tr("achievements.consistent.description"),
-                current: min(viewModel.currentStreak(), 3),
-                target: 3,
+                current: metric(for: .consistent).current,
+                target: metric(for: .consistent).target,
                 symbol: "flame.fill",
                 color: AppTheme.Colors.stickyMint
             ),
             AchievementItem(
+                id: .unstoppable,
                 title: tr("achievements.unstoppable.title"),
                 description: tr("achievements.unstoppable.description"),
-                current: min(viewModel.currentStreak(), 7),
-                target: 7,
+                current: metric(for: .unstoppable).current,
+                target: metric(for: .unstoppable).target,
                 symbol: "bolt.fill",
                 color: AppTheme.Colors.stickyPink
             ),
             AchievementItem(
+                id: .solidWeek,
                 title: tr("achievements.solidWeek.title"),
                 description: tr("achievements.solidWeek.description"),
-                current: min(weeklyCompletionPercent, 80),
-                target: 80,
+                current: metric(for: .solidWeek).current,
+                target: metric(for: .solidWeek).target,
                 symbol: "chart.bar.fill",
                 color: AppTheme.Colors.stickyPeach
             ),
             AchievementItem(
+                id: .organized,
                 title: tr("achievements.organized.title"),
                 description: tr("achievements.organized.description"),
-                current: min(viewModel.tasks.count, 25),
-                target: 25,
+                current: metric(for: .organized).current,
+                target: metric(for: .organized).target,
                 symbol: "tray.full.fill",
+                color: AppTheme.Colors.stickyLilac
+            ),
+            AchievementItem(
+                id: .taskMaster,
+                title: tr("achievements.taskMaster.title"),
+                description: tr("achievements.taskMaster.description"),
+                current: metric(for: .taskMaster).current,
+                target: metric(for: .taskMaster).target,
+                symbol: "checklist.checked",
+                color: AppTheme.Colors.stickyMint
+            ),
+            AchievementItem(
+                id: .marathoner,
+                title: tr("achievements.marathoner.title"),
+                description: tr("achievements.marathoner.description"),
+                current: metric(for: .marathoner).current,
+                target: metric(for: .marathoner).target,
+                symbol: "figure.run",
+                color: AppTheme.Colors.stickyPeach
+            ),
+            AchievementItem(
+                id: .momentum,
+                title: tr("achievements.momentum.title"),
+                description: tr("achievements.momentum.description"),
+                current: metric(for: .momentum).current,
+                target: metric(for: .momentum).target,
+                symbol: "flame.circle.fill",
+                color: AppTheme.Colors.stickyBlue
+            ),
+            AchievementItem(
+                id: .legend,
+                title: tr("achievements.legend.title"),
+                description: tr("achievements.legend.description"),
+                current: metric(for: .legend).current,
+                target: metric(for: .legend).target,
+                symbol: "crown.fill",
+                color: AppTheme.Colors.stickyYellow
+            ),
+            AchievementItem(
+                id: .perfectWeek,
+                title: tr("achievements.perfectWeek.title"),
+                description: tr("achievements.perfectWeek.description"),
+                current: metric(for: .perfectWeek).current,
+                target: metric(for: .perfectWeek).target,
+                symbol: "calendar.badge.checkmark",
+                color: AppTheme.Colors.stickyPink
+            ),
+            AchievementItem(
+                id: .dailyFocus,
+                title: tr("achievements.dailyFocus.title"),
+                description: tr("achievements.dailyFocus.description"),
+                current: metric(for: .dailyFocus).current,
+                target: metric(for: .dailyFocus).target,
+                symbol: "sun.max.fill",
                 color: AppTheme.Colors.stickyLilac
             ),
         ]
@@ -186,7 +234,7 @@ struct AchievementsScreen: View {
 }
 
 private struct AchievementItem: Identifiable {
-    let id = UUID()
+    let id: AchievementID
     let title: String
     let description: String
     let current: Int

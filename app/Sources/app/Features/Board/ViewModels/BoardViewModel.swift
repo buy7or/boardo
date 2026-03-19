@@ -8,6 +8,12 @@ enum AchievementID: String, CaseIterable, Hashable {
     case unstoppable
     case solidWeek
     case organized
+    case taskMaster
+    case marathoner
+    case momentum
+    case legend
+    case perfectWeek
+    case dailyFocus
 }
 
 struct AchievementMetric: Identifiable {
@@ -135,6 +141,16 @@ final class BoardViewModel {
             AchievementMetric(id: .unstoppable, current: min(currentStreak(referenceDate: referenceDate), 7), target: 7),
             AchievementMetric(id: .solidWeek, current: min(weeklyCompletionPercent(referenceDate: referenceDate), 80), target: 80),
             AchievementMetric(id: .organized, current: min(tasks.count, 25), target: 25),
+            AchievementMetric(id: .taskMaster, current: min(completedTasksCount, 25), target: 25),
+            AchievementMetric(id: .marathoner, current: min(completedTasksCount, 50), target: 50),
+            AchievementMetric(id: .momentum, current: min(currentStreak(referenceDate: referenceDate), 14), target: 14),
+            AchievementMetric(id: .legend, current: min(currentStreak(referenceDate: referenceDate), 30), target: 30),
+            AchievementMetric(id: .perfectWeek, current: min(weeklyCompletionPercent(referenceDate: referenceDate), 100), target: 100),
+            AchievementMetric(
+                id: .dailyFocus,
+                current: min(completedTasksCount(on: referenceDate), 3),
+                target: 3
+            ),
         ]
     }
 
@@ -223,6 +239,14 @@ final class BoardViewModel {
 
     private var completedTasksCount: Int {
         tasks.filter(\.isCompleted).count
+    }
+
+    private func completedTasksCount(on referenceDate: Date) -> Int {
+        let calendar = Calendar.current
+        return tasks.filter { task in
+            guard task.isCompleted, let dueDate = task.dueDate else { return false }
+            return calendar.isDate(dueDate, inSameDayAs: referenceDate)
+        }.count
     }
 
     private func weeklyCompletionPercent(referenceDate: Date) -> Int {

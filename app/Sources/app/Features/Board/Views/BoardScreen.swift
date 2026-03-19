@@ -388,6 +388,18 @@ struct BoardScreen: View {
             return L10n.tr("achievements.solidWeek.title")
         case .organized:
             return L10n.tr("achievements.organized.title")
+        case .taskMaster:
+            return L10n.tr("achievements.taskMaster.title")
+        case .marathoner:
+            return L10n.tr("achievements.marathoner.title")
+        case .momentum:
+            return L10n.tr("achievements.momentum.title")
+        case .legend:
+            return L10n.tr("achievements.legend.title")
+        case .perfectWeek:
+            return L10n.tr("achievements.perfectWeek.title")
+        case .dailyFocus:
+            return L10n.tr("achievements.dailyFocus.title")
         }
     }
 
@@ -405,6 +417,18 @@ struct BoardScreen: View {
             return "chart.bar.fill"
         case .organized:
             return "tray.full.fill"
+        case .taskMaster:
+            return "checklist.checked"
+        case .marathoner:
+            return "figure.run"
+        case .momentum:
+            return "flame.circle.fill"
+        case .legend:
+            return "crown.fill"
+        case .perfectWeek:
+            return "calendar.badge.checkmark"
+        case .dailyFocus:
+            return "sun.max.fill"
         }
     }
 
