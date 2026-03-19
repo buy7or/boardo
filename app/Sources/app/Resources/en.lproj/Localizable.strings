@@ -8,6 +8,7 @@
 "board.newNote" = "NEW NOTE";
 "board.streak.title" = "Daily streak";
 "board.streak.days" = "%d-day streak";
+"board.streak.motivation" = "Do it today. Keep the streak alive.";
 "board.weeklyProgress.title" = "Weekly progress";
 "board.weeklyProgress.detail" = "%d%% completed this week";
 

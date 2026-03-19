@@ -205,6 +205,13 @@ struct BoardScreen: View {
                 .font(AppTheme.Typography.stickyBody)
                 .foregroundStyle(AppTheme.Colors.title.opacity(0.9))
                 .lineLimit(1)
+
+                if shouldShowStreakMotivation {
+                    Text(L10n.tr("board.streak.motivation"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppTheme.Colors.title.opacity(0.85))
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -271,6 +278,18 @@ struct BoardScreen: View {
 
     private var dailyStreakCount: Int {
         viewModel.currentStreak()
+    }
+
+    private var hasCompletedTaskToday: Bool {
+        let calendar = Calendar.current
+        return viewModel.tasks.contains { task in
+            guard task.isCompleted, let dueDate = task.dueDate else { return false }
+            return calendar.isDate(dueDate, inSameDayAs: Date())
+        }
+    }
+
+    private var shouldShowStreakMotivation: Bool {
+        dailyStreakCount > 0 && !hasCompletedTaskToday
     }
 
     private func notifyScreenState() {

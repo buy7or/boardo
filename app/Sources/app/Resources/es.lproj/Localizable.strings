@@ -8,6 +8,7 @@
 "board.newNote" = "NUEVA NOTA";
 "board.streak.title" = "Racha diaria";
 "board.streak.days" = "Racha de %d dias";
+"board.streak.motivation" = "Hazla hoy. No rompas la racha.";
 "board.weeklyProgress.title" = "Progreso semanal";
 "board.weeklyProgress.detail" = "%d%% completado esta semana";
 
