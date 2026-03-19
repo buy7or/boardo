@@ -3,6 +3,7 @@ import SwiftUI
 enum AppTab: Int, Hashable {
     case board
     case stats
+    case achievements
     case settings
 }
 
@@ -30,6 +31,9 @@ struct AppRootView: View {
                     .frame(width: geometry.size.width)
 
                     StatsScreen(viewModel: boardViewModel)
+                        .frame(width: geometry.size.width)
+
+                    AchievementsScreen(viewModel: boardViewModel)
                         .frame(width: geometry.size.width)
 
                     SettingsScreen(viewModel: boardViewModel)

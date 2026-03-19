@@ -13,6 +13,9 @@ struct BottomNavigationBar: View {
             navItem(icon: "chart.bar.xaxis", title: L10n.tr("tab.stats"), selected: selectedTab == .stats) {
                 onSelect(.stats)
             }
+            navItem(icon: "rosette", title: L10n.tr("tab.achievements"), selected: selectedTab == .achievements) {
+                onSelect(.achievements)
+            }
             navItem(icon: "gearshape.fill", title: L10n.tr("tab.settings"), selected: selectedTab == .settings) {
                 onSelect(.settings)
             }
@@ -31,16 +34,9 @@ struct BottomNavigationBar: View {
 
     private func navItem(icon: String, title: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .symbolVariant(selected ? .fill : .none)
-
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                    .opacity(selected ? 1 : 0.72)
-            }
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .semibold))
+                .symbolVariant(selected ? .fill : .none)
             .foregroundStyle(selected ? AppTheme.Colors.accent : AppTheme.Colors.subtitle)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
@@ -54,6 +50,7 @@ struct BottomNavigationBar: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
         .animation(.spring(response: 0.32, dampingFraction: 0.82), value: selected)
     }
 }

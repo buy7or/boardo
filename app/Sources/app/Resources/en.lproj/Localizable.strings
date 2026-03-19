@@ -1,5 +1,6 @@
 "tab.board" = "Board";
 "tab.stats" = "Stats";
+"tab.achievements" = "Achievements";
 "tab.settings" = "Settings";
 
 "board.header.workspace" = "My Workspace";
@@ -71,3 +72,19 @@
 "stats.bestDateWithCount" = "%@ (%d)";
 "stats.bestWeekWithCount" = "%@ (%d)";
 "stats.noData" = "No data yet";
+
+"achievements.title" = "Achievements";
+"achievements.subtitle" = "Your progress and consistency";
+"achievements.progress" = "%d/%d";
+"achievements.firstStep.title" = "First step";
+"achievements.firstStep.description" = "Complete your first task.";
+"achievements.onTrack.title" = "On track";
+"achievements.onTrack.description" = "Complete 10 tasks.";
+"achievements.consistent.title" = "Consistent";
+"achievements.consistent.description" = "Keep a 3-day streak.";
+"achievements.unstoppable.title" = "Unstoppable";
+"achievements.unstoppable.description" = "Keep a 7-day streak.";
+"achievements.solidWeek.title" = "Solid week";
+"achievements.solidWeek.description" = "Reach 80%% weekly progress.";
+"achievements.organized.title" = "Organized";
+"achievements.organized.description" = "Create 25 tasks.";

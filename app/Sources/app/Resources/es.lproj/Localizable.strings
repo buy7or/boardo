@@ -1,5 +1,6 @@
 "tab.board" = "Tablero";
 "tab.stats" = "Estadisticas";
+"tab.achievements" = "Logros";
 "tab.settings" = "Ajustes";
 
 "board.header.workspace" = "Mi espacio";
@@ -71,3 +72,19 @@
 "stats.bestDateWithCount" = "%@ (%d)";
 "stats.bestWeekWithCount" = "%@ (%d)";
 "stats.noData" = "Sin datos todavia";
+
+"achievements.title" = "Logros";
+"achievements.subtitle" = "Tu progreso y constancia";
+"achievements.progress" = "%d/%d";
+"achievements.firstStep.title" = "Primer paso";
+"achievements.firstStep.description" = "Completa tu primera tarea.";
+"achievements.onTrack.title" = "En marcha";
+"achievements.onTrack.description" = "Completa 10 tareas.";
+"achievements.consistent.title" = "Constancia";
+"achievements.consistent.description" = "Mantén una racha de 3 dias.";
+"achievements.unstoppable.title" = "Imparable";
+"achievements.unstoppable.description" = "Mantén una racha de 7 dias.";
+"achievements.solidWeek.title" = "Semana solida";
+"achievements.solidWeek.description" = "Alcanza 80%% de progreso semanal.";
+"achievements.organized.title" = "Organizado";
+"achievements.organized.description" = "Crea 25 tareas.";
