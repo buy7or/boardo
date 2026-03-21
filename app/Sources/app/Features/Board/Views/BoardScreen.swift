@@ -174,9 +174,19 @@ struct BoardScreen: View {
                     .foregroundStyle(AppTheme.Colors.subtitle)
             }
             .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140)
+            .background {
+                RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous)
+                    .fill(Color.white.opacity(0.35))
+            }
             .overlay {
                 RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous)
-                    .stroke(Color.gray.opacity(0.45), style: StrokeStyle(lineWidth: 1.2, dash: [5]))
+                    .stroke(Color.brown.opacity(0.25), style: StrokeStyle(lineWidth: 1.2, dash: [5]))
+            }
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Color.white.opacity(0.5))
+                    .frame(width: 44, height: 10)
+                    .offset(y: -5)
             }
         }
         .buttonStyle(.plain)

@@ -34,24 +34,86 @@ struct StickyTaskCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140, alignment: .leading)
-        .background(task.category.color)
+        .background {
+            RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous)
+                .fill(task.category.color)
+                .overlay {
+                    // Subtle paper grain made from soft noise points.
+                    ZStack {
+                        ForEach(0..<16, id: \.self) { index in
+                            Circle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: CGFloat(2 + (index % 3)), height: CGFloat(2 + (index % 3)))
+                                .offset(
+                                    x: CGFloat((index * 19) % 110) - 55,
+                                    y: CGFloat((index * 13) % 108) - 54
+                                )
+                        }
+                    }
+                }
+                .overlay {
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.26), Color.clear, Color.black.opacity(0.07)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+                .overlay(alignment: .topTrailing) {
+                    foldCorner
+                }
+        }
         .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color.white.opacity(0.4))
-                .frame(width: 46, height: 10)
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(Color.white.opacity(0.5))
+                .frame(width: 48, height: 11)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .stroke(Color.white.opacity(0.55), lineWidth: 0.8)
+                }
                 .offset(y: -5)
+                .rotationEffect(.degrees(-3.5))
         }
         .overlay(alignment: .bottomTrailing) {
             Circle()
-                .fill(Color.white.opacity(0.2))
-                .frame(width: 26, height: 26)
-                .offset(x: 11, y: 11)
+                .fill(Color.black.opacity(0.06))
+                .frame(width: 24, height: 24)
+                .blur(radius: 1)
+                .offset(x: 12, y: 12)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.08), lineWidth: 0.8)
         }
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
         .rotationEffect(.degrees(angle))
-        .shadow(color: AppTheme.Shadow.card, radius: 8, x: 0, y: 5)
+        .shadow(color: Color.black.opacity(0.12), radius: 11, x: 0, y: 7)
         .opacity(task.isCompleted ? 0.82 : 1)
         .contentShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sticky, style: .continuous))
         .onTapGesture(perform: onOpen)
+    }
+
+    private var foldCorner: some View {
+        ZStack {
+            Triangle()
+                .fill(Color.white.opacity(0.3))
+                .frame(width: 26, height: 26)
+
+            Triangle()
+                .stroke(Color.black.opacity(0.06), lineWidth: 0.8)
+                .frame(width: 26, height: 26)
+        }
+        .rotationEffect(.degrees(45))
+        .offset(x: 10, y: -9)
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
