@@ -119,9 +119,16 @@ private enum class BoardTab {
     Settings
 }
 
-private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
-private val SpanishMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES"))
+private enum class AppLanguage {
+    Es,
+    En
+}
 
+private fun i18n(language: AppLanguage, es: String, en: String): String {
+    return if (language == AppLanguage.Es) es else en
+}
+
+private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
 private val defaultCategories = listOf(
     TaskCategoryUi("personal", "Personal", Icons.Outlined.PushPin, Color(0xFFF1E27B)),
     TaskCategoryUi("routine", "Rutina", Icons.Outlined.Autorenew, Color(0xFFB8C9E8)),
@@ -160,6 +167,7 @@ private fun BoardHomeScreen() {
     var editingTaskId by remember { mutableStateOf<String?>(null) }
     var showMonthPicker by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(BoardTab.Board) }
+    var appLanguage by remember { mutableStateOf(BoardLocalStore.loadLanguage(context)) }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -193,6 +201,7 @@ private fun BoardHomeScreen() {
                         .padding(top = 8.dp)
                 ) {
                     MonthCalendarCard(
+                        language = appLanguage,
                         selectedDate = selectedDate,
                         taskDates = taskDates,
                         weeklyCompleted = weeklyCompleted,
@@ -204,7 +213,7 @@ private fun BoardHomeScreen() {
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    StreakCard(days = streakCount)
+                    StreakCard(days = streakCount, language = appLanguage)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     LazyVerticalGrid(
@@ -224,7 +233,7 @@ private fun BoardHomeScreen() {
                         }
 
                         item {
-                            AddNoteCard(onClick = { showAddDialog = true })
+                            AddNoteCard(onClick = { showAddDialog = true }, language = appLanguage)
                         }
                     }
                 }
@@ -232,6 +241,11 @@ private fun BoardHomeScreen() {
 
             BoardTab.Settings -> {
                 SettingsScreen(
+                    language = appLanguage,
+                    onLanguageChange = {
+                        appLanguage = it
+                        BoardLocalStore.saveLanguage(context, it)
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
@@ -263,6 +277,7 @@ private fun BoardHomeScreen() {
             )
         ) {
             AddTaskDialog(
+                language = appLanguage,
                 categories = defaultCategories,
                 selectedDate = selectedDate,
                 onDismiss = { showAddDialog = false },
@@ -285,6 +300,7 @@ private fun BoardHomeScreen() {
 
         if (editingTask != null) {
             ExpandedStickyTaskEditor(
+                language = appLanguage,
                 task = editingTask,
                 categories = defaultCategories,
                 onDismiss = { editingTaskId = null },
@@ -315,6 +331,7 @@ private fun BoardHomeScreen() {
 
         if (showMonthPicker && selectedTab == BoardTab.Board) {
             MonthPickerOverlay(
+                language = appLanguage,
                 selectedDate = selectedDate,
                 taskDates = taskDates,
                 onDismiss = { showMonthPicker = false },
@@ -329,6 +346,7 @@ private fun BoardHomeScreen() {
 
 @Composable
 private fun MonthCalendarCard(
+    language: AppLanguage,
     selectedDate: LocalDate,
     taskDates: Set<LocalDate>,
     weeklyCompleted: Int,
@@ -351,8 +369,10 @@ private fun MonthCalendarCard(
         label = "weekly_progress"
     )
     val weeklyPercent = (weeklyProgress * 100).toInt()
-    val monthTitle = selectedDate.format(SpanishMonthFormatter).replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString()
+    val monthLocale = if (language == AppLanguage.Es) Locale("es", "ES") else Locale.US
+    val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", monthLocale)
+    val monthTitle = selectedDate.format(monthFormatter).replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(monthLocale) else it.toString()
     }
 
     Column(
@@ -454,7 +474,7 @@ private fun MonthCalendarCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Progreso semanal",
+                i18n(language, "Progreso semanal", "Weekly progress"),
                 style = MaterialTheme.typography.labelMedium,
                 color = Color(0xFF8E99AE),
                 fontWeight = FontWeight.SemiBold
@@ -484,7 +504,7 @@ private fun MonthCalendarCard(
         }
 
         Text(
-            "$weeklyPercent% completado esta semana",
+            i18n(language, "$weeklyPercent% completado esta semana", "$weeklyPercent% completed this week"),
             style = MaterialTheme.typography.labelSmall,
             color = Color(0xFFB0B8C7),
             fontWeight = FontWeight.SemiBold
@@ -494,6 +514,7 @@ private fun MonthCalendarCard(
 
 @Composable
 private fun MonthPickerOverlay(
+    language: AppLanguage,
     selectedDate: LocalDate,
     taskDates: Set<LocalDate>,
     onDismiss: () -> Unit,
@@ -502,8 +523,9 @@ private fun MonthPickerOverlay(
     var visibleMonth by remember(selectedDate) { mutableStateOf(YearMonth.from(selectedDate)) }
     var dragX by remember { mutableStateOf(0f) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
-    val monthTitle = visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES")))
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString() }
+    val monthLocale = if (language == AppLanguage.Es) Locale("es", "ES") else Locale.US
+    val monthTitle = visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", monthLocale))
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(monthLocale) else it.toString() }
 
     val firstDayOffset = visibleMonth.atDay(1).dayOfWeek.value % 7
     val totalDays = visibleMonth.lengthOfMonth()
@@ -671,7 +693,7 @@ private fun MonthPickerOverlay(
 }
 
 @Composable
-private fun StreakCard(days: Int) {
+private fun StreakCard(days: Int, language: AppLanguage) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -719,13 +741,13 @@ private fun StreakCard(days: Int) {
             }
             Column {
                 Text(
-                    "Racha diaria",
+                    i18n(language, "Racha diaria", "Daily streak"),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF7A889D),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Racha de $days dias",
+                    i18n(language, "Racha de $days dias", "$days-day streak"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF2F3A4E),
@@ -800,7 +822,7 @@ private fun StickyNoteCard(task: BoardTaskUi, category: TaskCategoryUi, rotation
 }
 
 @Composable
-private fun AddNoteCard(onClick: () -> Unit) {
+private fun AddNoteCard(onClick: () -> Unit, language: AppLanguage) {
     val shape = RoundedCornerShape(14.dp)
 
     Box(
@@ -844,7 +866,7 @@ private fun AddNoteCard(onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                "NUEVA NOTA",
+                i18n(language, "NUEVA NOTA", "NEW NOTE"),
                 color = Color(0xFF8B95A8),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
@@ -856,6 +878,7 @@ private fun AddNoteCard(onClick: () -> Unit) {
 
 @Composable
 private fun AddTaskDialog(
+    language: AppLanguage,
     categories: List<TaskCategoryUi>,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
@@ -894,7 +917,7 @@ private fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    "Nueva nota",
+                    i18n(language, "Nueva nota", "New note"),
                     color = Color(0xFFF87533),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
@@ -935,7 +958,7 @@ private fun AddTaskDialog(
                     decorationBox = { innerTextField ->
                         if (title.isBlank()) {
                             Text(
-                                "Tarea",
+                                i18n(language, "Tarea", "Task"),
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color(0xFF202633),
                                 fontFamily = StickyFont,
@@ -960,7 +983,7 @@ private fun AddTaskDialog(
                     decorationBox = { innerTextField ->
                         if (notes.isBlank()) {
                             Text(
-                                "Descripcion",
+                                i18n(language, "Descripcion", "Description"),
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = Color(0xFF9A9570),
                                 fontFamily = StickyFont,
@@ -973,7 +996,7 @@ private fun AddTaskDialog(
             }
 
             Text(
-                text = "Elige una pegatina",
+                text = i18n(language, "Elige una pegatina", "Choose a sticker"),
                 color = Color(0xFF8E99AE),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -1049,7 +1072,7 @@ private fun AddTaskDialog(
                         modifier = Modifier.size(17.dp)
                     )
                     Text(
-                        "Fijar en tablero",
+                        i18n(language, "Fijar en tablero", "Pin to board"),
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -1062,6 +1085,7 @@ private fun AddTaskDialog(
 
 @Composable
 private fun ExpandedStickyTaskEditor(
+    language: AppLanguage,
     task: BoardTaskUi,
     categories: List<TaskCategoryUi>,
     onDismiss: () -> Unit,
@@ -1134,7 +1158,7 @@ private fun ExpandedStickyTaskEditor(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "PARA HOY",
+                        i18n(language, "PARA HOY", "FOR TODAY"),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFFF87533),
                         fontWeight = FontWeight.ExtraBold
@@ -1165,7 +1189,7 @@ private fun ExpandedStickyTaskEditor(
                     )
 
                     Text(
-                        "adjunto",
+                        i18n(language, "adjunto", "attachment"),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF8B95A8),
                         fontFamily = StickyFont
@@ -1215,7 +1239,7 @@ private fun ExpandedStickyTaskEditor(
                 }
 
                 Text(
-                    "HAS TERMINADO?",
+                    i18n(language, "HAS TERMINADO?", "ARE YOU DONE?"),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF9AA4B7),
                     fontWeight = FontWeight.ExtraBold,
@@ -1230,7 +1254,11 @@ private fun ExpandedStickyTaskEditor(
                         .background(Color(0xFFF87533))
                 ) {
                     Text(
-                        text = if (task.isCompleted) "Marcar pendiente" else "Completar tarea",
+                        text = if (task.isCompleted) {
+                            i18n(language, "Marcar pendiente", "Mark pending")
+                        } else {
+                            i18n(language, "Completar tarea", "Complete task")
+                        },
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -1241,14 +1269,18 @@ private fun ExpandedStickyTaskEditor(
                         onClick = { dismissSmooth { onDelete() } },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Eliminar", color = Color(0xFFF25C5C))
+                        Text(i18n(language, "Eliminar", "Delete"), color = Color(0xFFF25C5C))
                     }
                     TextButton(
                         onClick = { dismissSmooth { onSave(title, notes, categoryId) } },
                         enabled = title.isNotBlank(),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Guardar cambios", color = Color(0xFFF87533), fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            i18n(language, "Guardar cambios", "Save changes"),
+                            color = Color(0xFFF87533),
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
                 }
             }
@@ -1257,9 +1289,13 @@ private fun ExpandedStickyTaskEditor(
 }
 
 @Composable
-private fun SettingsScreen(modifier: Modifier = Modifier) {
+private fun SettingsScreen(
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var dailyNotificationEnabled by remember { mutableStateOf(false) }
-    var language by remember { mutableStateOf("es") }
+    var notificationTime by remember { mutableStateOf("09:00") }
 
     Column(
         modifier = modifier,
@@ -1267,14 +1303,18 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
     ) {
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            "Ajustes",
+            i18n(language, "Ajustes", "Settings"),
             color = Color(0xFF2E374C),
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Text(
-            "Configura la notificacion diaria y activa el\nrecordatorio.",
+            i18n(
+                language,
+                "Configura la notificacion diaria y activa el\nrecordatorio.",
+                "Set up your daily notification and enable\nthe reminder."
+            ),
             color = Color(0xFF9AA4B8),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
@@ -1293,13 +1333,17 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Notificacion diaria",
+                        i18n(language, "Notificacion diaria", "Daily notification"),
                         color = Color(0xFF2E374C),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        "Recibe un recordatorio cada dia a la\nhora elegida.",
+                        i18n(
+                            language,
+                            "Recibe un recordatorio cada dia a la\nhora elegida.",
+                            "Receive a reminder every day at\nthe selected time."
+                        ),
                         color = Color(0xFF9CA6B9),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
@@ -1318,7 +1362,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
-                    "09:00",
+                    notificationTime,
                     color = Color(0xFF7F899E),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
@@ -1336,7 +1380,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                "Idioma de la app",
+                i18n(language, "Idioma de la app", "App language"),
                 color = Color(0xFF2E374C),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold
@@ -1348,29 +1392,29 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     .background(Color(0xFFF1F3F7))
                     .padding(2.dp)
             ) {
-                val esSelected = language == "es"
+                val esSelected = language == AppLanguage.Es
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (esSelected) Color.White else Color.Transparent)
-                        .clickable { language = "es" }
+                        .clickable { onLanguageChange(AppLanguage.Es) }
                         .padding(vertical = 7.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Espanol", fontWeight = FontWeight.Bold, color = Color(0xFF3B4457))
                 }
-                val enSelected = language == "en"
+                val enSelected = language == AppLanguage.En
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (enSelected) Color.White else Color.Transparent)
-                        .clickable { language = "en" }
+                        .clickable { onLanguageChange(AppLanguage.En) }
                         .padding(vertical = 7.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Ingles", fontWeight = FontWeight.Bold, color = Color(0xFF3B4457))
+                    Text("English", fontWeight = FontWeight.Bold, color = Color(0xFF3B4457))
                 }
             }
         }
@@ -1395,7 +1439,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             ) {
                 Icon(Icons.Outlined.Apps, contentDescription = null, tint = Color(0xFFF07640), modifier = Modifier.size(18.dp))
                 Text(
-                    "Gestionar categorias",
+                    i18n(language, "Gestionar categorias", "Manage categories"),
                     color = Color(0xFFF07640),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold
@@ -1488,6 +1532,7 @@ private fun computeStreak(tasks: List<BoardTaskUi>, referenceDate: LocalDate = L
 private object BoardLocalStore {
     private const val prefsName = "boardo_android"
     private const val keyTasks = "board_tasks_v1"
+    private const val keyLanguage = "app_language_v1"
 
     fun loadTasks(context: Context): List<BoardTaskUi> {
         val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
@@ -1537,6 +1582,20 @@ private object BoardLocalStore {
         context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             .edit()
             .putString(keyTasks, payload.toString())
+            .apply()
+    }
+
+    fun loadLanguage(context: Context): AppLanguage {
+        val raw = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .getString(keyLanguage, "es")
+        return if (raw == "en") AppLanguage.En else AppLanguage.Es
+    }
+
+    fun saveLanguage(context: Context, language: AppLanguage) {
+        val value = if (language == AppLanguage.En) "en" else "es"
+        context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .edit()
+            .putString(keyLanguage, value)
             .apply()
     }
 }
