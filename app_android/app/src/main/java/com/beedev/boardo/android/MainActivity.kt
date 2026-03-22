@@ -903,7 +903,7 @@ private fun AddTaskDialog(
                     .height(410.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(selectedCategory.color)
-                    .shadow(8.dp, RoundedCornerShape(14.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.55f), RoundedCornerShape(14.dp))
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
