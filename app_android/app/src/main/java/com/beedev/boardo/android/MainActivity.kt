@@ -872,6 +872,11 @@ private fun AddTaskDialog(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF3F3F5))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            )
             .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
@@ -883,7 +888,8 @@ private fun AddTaskDialog(
                 Text(
                     "✕",
                     color = Color(0xFF9CA5B6),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable(onClick = onDismiss)
                 )
                 Spacer(modifier = Modifier.weight(1f))
