@@ -41,6 +41,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Autorenew
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.ContentCut
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +69,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -82,7 +88,7 @@ import java.util.UUID
 data class TaskCategoryUi(
     val id: String,
     val label: String,
-    val icon: String,
+    val icon: ImageVector,
     val color: Color
 ) {
     val boardTag: String
@@ -102,11 +108,11 @@ private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
 private val SpanishMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES"))
 
 private val defaultCategories = listOf(
-    TaskCategoryUi("personal", "Personal", "📌", Color(0xFFF1E27B)),
-    TaskCategoryUi("routine", "Rutina", "↻", Color(0xFFB8C9E8)),
-    TaskCategoryUi("work", "Trabajo", "✂", Color(0xFFBFE6C4)),
-    TaskCategoryUi("family", "Familia", "❤", Color(0xFFE4BCD8)),
-    TaskCategoryUi("urgent", "Urgente", "⚡", Color(0xFFFFD2A0))
+    TaskCategoryUi("personal", "Personal", Icons.Outlined.PushPin, Color(0xFFF1E27B)),
+    TaskCategoryUi("routine", "Rutina", Icons.Outlined.Autorenew, Color(0xFFB8C9E8)),
+    TaskCategoryUi("work", "Trabajo", Icons.Outlined.ContentCut, Color(0xFFBFE6C4)),
+    TaskCategoryUi("family", "Familia", Icons.Outlined.FavoriteBorder, Color(0xFFE4BCD8)),
+    TaskCategoryUi("urgent", "Urgente", Icons.Outlined.Bolt, Color(0xFFFFD2A0))
 )
 
 class MainActivity : ComponentActivity() {
@@ -394,7 +400,16 @@ private fun StickyNoteCard(task: BoardTaskUi, category: TaskCategoryUi, rotation
                 fontFamily = StickyFont
             )
             Spacer(modifier = Modifier.weight(1f))
-            Text(if (task.isCompleted) "✓" else category.icon, color = Color(0xFF8C96A8))
+            if (task.isCompleted) {
+                Text("✓", color = Color(0xFF8C96A8))
+            } else {
+                Icon(
+                    imageVector = category.icon,
+                    contentDescription = category.label,
+                    tint = Color(0xFF7E8899),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
@@ -483,7 +498,12 @@ private fun AddTaskDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(category.icon)
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = category.label,
+                                tint = Color(0xFF5D6678),
+                                modifier = Modifier.size(16.dp)
+                            )
                             Text(category.label, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -636,11 +656,20 @@ private fun ExpandedStickyTaskEditor(
                                     .background(category.color, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = if (selected) "•" else category.icon,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color(0xFF4D5566)
-                                )
+                                if (selected) {
+                                    Text(
+                                        text = "•",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color(0xFF4D5566)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = category.icon,
+                                        contentDescription = category.label,
+                                        tint = Color(0xFF4D5566),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                             Text(
                                 text = category.label,

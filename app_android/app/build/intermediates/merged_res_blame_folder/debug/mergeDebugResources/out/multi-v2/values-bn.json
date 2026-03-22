@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.beedev.boardo.android.app-mergeDebugResources-59:/values-bn/values-bn.xml",
+            "outputFile": "com.beedev.boardo.android.app-mergeDebugResources-60:/values-bn/values-bn.xml",
             "map": [
                 {
                     "source": "/home/diego/.gradle/caches/transforms-4/82d9d1c1b56a743e8acf0a1234b5c028/transformed/ui-release/res/values-bn/values-bn.xml",

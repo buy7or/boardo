@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.beedev.boardo.android.app-mergeDebugResources-59:/values-pt-rPT/values-pt-rPT.xml",
+            "outputFile": "com.beedev.boardo.android.app-mergeDebugResources-60:/values-pt-rPT/values-pt-rPT.xml",
             "map": [
                 {
                     "source": "/home/diego/.gradle/caches/transforms-4/ce9fae76745db6c4be64613caab71ecc/transformed/material3-release/res/values-pt-rPT/values-pt-rPT.xml",
