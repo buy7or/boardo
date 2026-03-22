@@ -1777,6 +1777,11 @@ private fun ManageCategoriesDialog(
     onCreateCategory: (label: String, iconKey: String, color: Color) -> Unit,
     onDeleteCategory: (categoryId: String) -> Unit
 ) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     var name by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf(availableCategoryColors.first()) }
     var selectedIconKey by remember { mutableStateOf(availableCategoryIcons.first()) }
@@ -1791,7 +1796,11 @@ private fun ManageCategoriesDialog(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {}
+                onClick = {
+                    focusManager.clearFocus(force = true)
+                    keyboardController?.hide()
+                    imm.hideSoftInputFromWindow(view.windowToken, 0)
+                }
             )
             .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -1801,6 +1810,15 @@ private fun ManageCategoriesDialog(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFFF1F2F4))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+                        focusManager.clearFocus(force = true)
+                        keyboardController?.hide()
+                        imm.hideSoftInputFromWindow(view.windowToken, 0)
+                    }
+                )
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
