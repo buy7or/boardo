@@ -116,6 +116,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -1344,9 +1345,16 @@ private fun ExpandedStickyTaskEditor(
     onToggleDone: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     var title by remember(task.id) { mutableStateOf(task.title) }
     var notes by remember(task.id) { mutableStateOf(task.notes) }
     var categoryId by remember(task.id) { mutableStateOf(task.categoryId) }
+    var titleFocused by remember(task.id) { mutableStateOf(false) }
+    var notesFocused by remember(task.id) { mutableStateOf(false) }
     val activeCategory = categories.firstOrNull { it.id == categoryId } ?: categories.first()
     val visibleState = remember(task.id) { MutableTransitionState(false).apply { targetState = true } }
     var pendingAction by remember(task.id) { mutableStateOf<(() -> Unit)?>(null) }
@@ -1375,7 +1383,15 @@ private fun ExpandedStickyTaskEditor(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.32f))
-                .clickable { dismissSmooth() },
+                .clickable {
+                    val hadKeyboardFocus = titleFocused || notesFocused
+                    focusManager.clearFocus(force = true)
+                    keyboardController?.hide()
+                    imm.hideSoftInputFromWindow(view.windowToken, 0)
+                    if (!hadKeyboardFocus) {
+                        dismissSmooth()
+                    }
+                },
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -1384,7 +1400,15 @@ private fun ExpandedStickyTaskEditor(
                     .padding(horizontal = 14.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color(0xFFF7F7F9))
-                    .clickable { }
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {
+                            focusManager.clearFocus(force = true)
+                            keyboardController?.hide()
+                            imm.hideSoftInputFromWindow(view.windowToken, 0)
+                        }
+                    )
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -1423,8 +1447,10 @@ private fun ExpandedStickyTaskEditor(
                             fontFamily = StickyFont,
                             fontWeight = FontWeight.ExtraBold
                         ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { titleFocused = it.isFocused }
                     )
 
                     BasicTextField(
@@ -1437,6 +1463,7 @@ private fun ExpandedStickyTaskEditor(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
+                            .onFocusChanged { notesFocused = it.isFocused }
                     )
 
                     Text(
