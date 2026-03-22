@@ -72,6 +72,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -82,6 +83,8 @@ import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.TaskAlt
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -292,6 +295,11 @@ private fun BoardHomeScreen() {
     }
     val weeklyTotal = weekTasks.size
     val weeklyCompleted = weekTasks.count { it.isCompleted }
+    val weeklyPercent = if (weeklyTotal > 0) (weeklyCompleted * 100) / weeklyTotal else 0
+    val completedTasksCount = tasks.count { it.isCompleted }
+    val longestStreak = computeLongestStreak(tasks)
+    val bestDay = computeDayWithMostTasks(tasks)
+    val bestWeek = computeWeekWithMostTasks(tasks)
 
     fun persist() {
         BoardLocalStore.saveTasks(context, tasks)
@@ -436,13 +444,16 @@ private fun BoardHomeScreen() {
                 }
 
                 BoardTab.Stats -> {
-                    PlaceholderScreen(
-                        title = i18n(appLanguage, "Estadisticas", "Statistics"),
-                        subtitle = i18n(
-                            appLanguage,
-                            "Desliza para cambiar entre pantallas.",
-                            "Swipe to move between screens."
-                        ),
+                    StatsScreen(
+                        language = appLanguage,
+                        currentStreak = streakCount,
+                        longestStreak = longestStreak,
+                        completedTasksCount = completedTasksCount,
+                        weeklyPercent = weeklyPercent,
+                        weeklyCompleted = weeklyCompleted,
+                        weeklyTotal = weeklyTotal,
+                        bestDay = bestDay,
+                        bestWeek = bestWeek,
                         modifier = Modifier
                             .fillMaxSize()
                             .statusBarsPadding()
@@ -2042,6 +2053,146 @@ private fun PlaceholderScreen(title: String, subtitle: String, modifier: Modifie
 }
 
 @Composable
+private fun StatsScreen(
+    language: AppLanguage,
+    currentStreak: Int,
+    longestStreak: Int,
+    completedTasksCount: Int,
+    weeklyPercent: Int,
+    weeklyCompleted: Int,
+    weeklyTotal: Int,
+    bestDay: Pair<LocalDate, Int>?,
+    bestWeek: Pair<Pair<LocalDate, LocalDate>, Int>?,
+    modifier: Modifier = Modifier
+) {
+    val locale = if (language == AppLanguage.Es) Locale("es", "ES") else Locale.US
+    val dayFormatter = DateTimeFormatter.ofPattern(
+        if (language == AppLanguage.Es) "d MMM yyyy" else "MMM d yyyy",
+        locale
+    )
+    val weekFormatter = DateTimeFormatter.ofPattern(
+        if (language == AppLanguage.Es) "d/M/yy" else "M/d/yy",
+        locale
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            i18n(language, "Estadisticas", "Statistics"),
+            color = Color(0xFF2E374C),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+            i18n(language, "Resumen de productividad", "Productivity summary"),
+            color = Color(0xFF9AA4B8),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        StatStickyCard(
+            title = i18n(language, "Racha actual", "Current streak"),
+            value = i18n(language, "$currentStreak dias", "$currentStreak days"),
+            color = Color(0xFFF1E27B),
+            icon = Icons.Outlined.LocalFireDepartment
+        )
+        StatStickyCard(
+            title = i18n(language, "Racha mas larga", "Longest streak"),
+            value = i18n(language, "$longestStreak dias", "$longestStreak days"),
+            color = Color(0xFFE4BCD8),
+            icon = Icons.Outlined.LocalFireDepartment
+        )
+        StatStickyCard(
+            title = i18n(language, "Tareas completadas", "Completed tasks"),
+            value = completedTasksCount.toString(),
+            color = Color(0xFFBFE6C4),
+            icon = Icons.Outlined.TaskAlt
+        )
+        StatStickyCard(
+            title = i18n(language, "Porcentaje completado", "Completion rate"),
+            value = "$weeklyPercent% [$weeklyCompleted/$weeklyTotal]",
+            color = Color(0xFFB8C9E8),
+            icon = Icons.Outlined.BarChart
+        )
+
+        val bestDayText = if (bestDay != null) {
+            "${bestDay.first.format(dayFormatter).lowercase(locale)} (${bestDay.second})"
+        } else {
+            i18n(language, "Sin datos", "No data")
+        }
+        StatStickyCard(
+            title = i18n(language, "Dia con mas tareas", "Day with most tasks"),
+            value = bestDayText,
+            color = Color(0xFFF1E27B),
+            icon = Icons.Outlined.Today
+        )
+
+        val bestWeekText = if (bestWeek != null) {
+            val (range, count) = bestWeek
+            "${range.first.format(weekFormatter)}-${range.second.format(weekFormatter)} ($count)"
+        } else {
+            i18n(language, "Sin datos", "No data")
+        }
+        StatStickyCard(
+            title = i18n(language, "Semana con mas tareas", "Week with most tasks"),
+            value = bestWeekText,
+            color = Color(0xFFE4BCD8),
+            icon = Icons.Outlined.Event
+        )
+    }
+}
+
+@Composable
+private fun StatStickyCard(title: String, value: String, color: Color, icon: ImageVector) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(color)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .width(30.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color.White.copy(alpha = 0.45f))
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.65f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = Color(0xFFF87533), modifier = Modifier.size(14.dp))
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    title,
+                    color = Color(0xFF8591A8),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    value,
+                    color = Color(0xFF2F3A4E),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = StickyFont
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun BottomBoardNav(selectedTab: BoardTab, onSelectTab: (BoardTab) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
@@ -2119,6 +2270,49 @@ private fun computeStreak(tasks: List<BoardTaskUi>, referenceDate: LocalDate = L
     }
 
     return streak
+}
+
+private fun computeLongestStreak(tasks: List<BoardTaskUi>): Int {
+    val completedDays = tasks.asSequence()
+        .filter { it.isCompleted && it.dueDate != null }
+        .mapNotNull { it.dueDate }
+        .toSet()
+        .sorted()
+
+    if (completedDays.isEmpty()) return 0
+    var longest = 1
+    var current = 1
+    for (i in 1 until completedDays.size) {
+        if (completedDays[i] == completedDays[i - 1].plusDays(1)) {
+            current += 1
+            if (current > longest) longest = current
+        } else {
+            current = 1
+        }
+    }
+    return longest
+}
+
+private fun computeDayWithMostTasks(tasks: List<BoardTaskUi>): Pair<LocalDate, Int>? {
+    val grouped = tasks.asSequence()
+        .mapNotNull { it.dueDate }
+        .groupingBy { it }
+        .eachCount()
+    if (grouped.isEmpty()) return null
+    val best = grouped.maxWithOrNull(compareBy<Map.Entry<LocalDate, Int>> { it.value }.thenBy { it.key }) ?: return null
+    return best.key to best.value
+}
+
+private fun computeWeekWithMostTasks(tasks: List<BoardTaskUi>): Pair<Pair<LocalDate, LocalDate>, Int>? {
+    val grouped = tasks.asSequence()
+        .mapNotNull { it.dueDate }
+        .groupingBy { it.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) }
+        .eachCount()
+    if (grouped.isEmpty()) return null
+    val best = grouped.maxWithOrNull(compareBy<Map.Entry<LocalDate, Int>> { it.value }.thenBy { it.key }) ?: return null
+    val start = best.key
+    val end = start.plusDays(6)
+    return (start to end) to best.value
 }
 
 private object DailyNotificationScheduler {
