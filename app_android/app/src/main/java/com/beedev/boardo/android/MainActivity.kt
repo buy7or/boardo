@@ -9,6 +9,7 @@ import android.app.TimePickerDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.view.inputmethod.InputMethodManager
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +36,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -105,10 +109,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -160,6 +168,22 @@ private enum class AppLanguage {
 
 private fun i18n(language: AppLanguage, es: String, en: String): String {
     return if (language == AppLanguage.Es) es else en
+}
+
+private fun Modifier.dismissKeyboardOnTap(
+    focusManager: FocusManager,
+    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
+): Modifier {
+    return this.pointerInput(focusManager, keyboardController) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val up = waitForUpOrCancellation()
+            if (up != null) {
+                focusManager.clearFocus(force = true)
+                keyboardController?.hide()
+            }
+        }
+    }
 }
 
 private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
@@ -227,6 +251,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun BoardHomeScreen() {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val categories = remember {
         mutableStateListOf<TaskCategoryUi>().apply {
             addAll(BoardLocalStore.loadCategories(context))
@@ -299,6 +325,7 @@ private fun BoardHomeScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(if (selectedTab == BoardTab.Settings) Color(0xFFF9FAFC) else Color(0xFFF3F3F5))
+            .dismissKeyboardOnTap(focusManager, keyboardController)
             .pointerInput(selectedTab, showAddDialog, editingTaskId, showMonthPicker, showManageCategories) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { _, amount ->
@@ -1098,6 +1125,11 @@ private fun AddTaskDialog(
     onDismiss: () -> Unit,
     onCreate: (title: String, notes: String, categoryId: String, dueDate: LocalDate?) -> Unit
 ) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     var title by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf(categories.first().id) }
@@ -1109,10 +1141,15 @@ private fun AddTaskDialog(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF3F3F5))
+            .dismissKeyboardOnTap(focusManager, keyboardController)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {}
+                onClick = {
+                    focusManager.clearFocus(force = true)
+                    keyboardController?.hide()
+                    imm.hideSoftInputFromWindow(view.windowToken, 0)
+                }
             )
             .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 10.dp)
