@@ -46,10 +46,8 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -466,65 +464,190 @@ private fun AddTaskDialog(
     var title by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf(categories.first().id) }
+    val selectedCategory = categories.firstOrNull { it.id == selectedCategoryId } ?: categories.first()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nueva tarea") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
+    BackHandler(onBack = onDismiss)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF3F3F5))
+            .statusBarsPadding()
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "✕",
+                    color = Color(0xFF9CA5B6),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.clickable(onClick = onDismiss)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "Nueva nota",
+                    color = Color(0xFFF87533),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.width(18.dp))
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(410.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(selectedCategory.color)
+                    .shadow(8.dp, RoundedCornerShape(14.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .width(54.dp)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color.White.copy(alpha = 0.35f))
+                )
+
+                BasicTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Titulo") },
-                    singleLine = true
+                    textStyle = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color(0xFF202633),
+                        fontFamily = StickyFont,
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        if (title.isBlank()) {
+                            Text(
+                                "Tarea",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color(0xFF202633),
+                                fontFamily = StickyFont,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
-                OutlinedTextField(
+
+                BasicTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notas") },
-                    minLines = 3,
-                    maxLines = 4
+                    textStyle = MaterialTheme.typography.headlineSmall.copy(
+                        color = Color(0xFF8A845F),
+                        fontFamily = StickyFont,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    decorationBox = { innerTextField ->
+                        if (notes.isBlank()) {
+                            Text(
+                                "Descripcion",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = Color(0xFF9A9570),
+                                fontFamily = StickyFont,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
-                Text("Sticker", style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(categories) { category ->
-                        val selected = selectedCategoryId == category.id
-                        Row(
+            }
+
+            Text(
+                text = "Elige una pegatina",
+                color = Color(0xFF8E99AE),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
+            ) {
+                items(categories) { category ->
+                    val selected = category.id == selectedCategoryId
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.clickable { selectedCategoryId = category.id }
+                    ) {
+                        Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(if (selected) category.color else Color(0xFFEAEAF0))
-                                .clickable { selectedCategoryId = category.id }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(category.color)
+                                .drawBehind {
+                                    if (selected) {
+                                        drawCircle(
+                                            color = Color(0xFFF87533),
+                                            style = Stroke(
+                                                width = 2.dp.toPx(),
+                                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
+                                            )
+                                        )
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = category.icon,
                                 contentDescription = category.label,
-                                tint = Color(0xFF5D6678),
-                                modifier = Modifier.size(16.dp)
+                                tint = Color(0xFF667084),
+                                modifier = Modifier.size(18.dp)
                             )
-                            Text(category.label, fontWeight = FontWeight.SemiBold)
                         }
+                        Text(
+                            text = category.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF8E99AE)
+                        )
                     }
                 }
-                Text("Fecha: ${selectedDate.dayOfMonth}/${selectedDate.monthValue}/${selectedDate.year}")
             }
-        },
-        confirmButton = {
+
             TextButton(
                 onClick = { onCreate(title, notes, selectedCategoryId, selectedDate) },
-                enabled = title.isNotBlank()
+                enabled = title.isNotBlank(),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(if (title.isNotBlank()) Color(0xFFF58A55) else Color(0xFFF3B99D))
+                    .padding(horizontal = 22.dp, vertical = 4.dp)
             ) {
-                Text("Pin")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.PushPin,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Text(
+                        "Fijar en tablero",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
