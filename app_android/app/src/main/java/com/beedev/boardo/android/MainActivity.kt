@@ -298,13 +298,13 @@ private fun BoardHomeScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(if (selectedTab == BoardTab.Settings) Color(0xFFF9FAFC) else Color(0xFFF3F3F5))
-            .pointerInput(selectedTab, showAddDialog, editingTaskId, showMonthPicker) {
+            .pointerInput(selectedTab, showAddDialog, editingTaskId, showMonthPicker, showManageCategories) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { _, amount ->
                         screenDragX += amount
                     },
                     onDragEnd = {
-                        if (!showAddDialog && editingTaskId == null && !showMonthPicker) {
+                        if (!showAddDialog && editingTaskId == null && !showMonthPicker && !showManageCategories) {
                             when {
                                 screenDragX <= -90f -> moveTab(+1)
                                 screenDragX >= 90f -> moveTab(-1)
@@ -1863,11 +1863,11 @@ private fun ManageCategoriesDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (canCreate) Color(0xFFF5C2AB) else Color(0xFFF2DAD0))
+                        .background(if (canCreate) Color(0xFFF87533) else Color(0xFFF2DAD0))
                 ) {
                     Text(
                         i18n(language, "Agregar categoria", "Add category"),
-                        color = Color.White,
+                        color = if (canCreate) Color.White else Color(0xFFF6ECE6),
                         fontWeight = FontWeight.Bold
                     )
                 }
