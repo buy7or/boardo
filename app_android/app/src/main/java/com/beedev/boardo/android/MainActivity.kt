@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -351,7 +352,20 @@ private fun StreakCard(days: Int) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text("🔥")
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFE6A6)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.LocalFireDepartment,
+                contentDescription = "Racha",
+                tint = Color(0xFFF87533),
+                modifier = Modifier.size(20.dp)
+            )
+        }
         Column {
             Text("Racha diaria", style = MaterialTheme.typography.labelMedium, color = Color(0xFF5B6578))
             Text(
