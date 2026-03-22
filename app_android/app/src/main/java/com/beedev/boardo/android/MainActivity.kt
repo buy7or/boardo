@@ -65,10 +65,18 @@ import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.LocalOffer
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -93,6 +101,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -117,9 +126,12 @@ import java.util.UUID
 data class TaskCategoryUi(
     val id: String,
     val label: String,
-    val icon: ImageVector,
+    val iconKey: String,
     val color: Color
 ) {
+    val icon: ImageVector
+        get() = categoryIconForKey(iconKey)
+
     val boardTag: String
         get() = label.trim().ifBlank { "TAG" }.uppercase().take(10)
 }
@@ -150,12 +162,51 @@ private fun i18n(language: AppLanguage, es: String, en: String): String {
 }
 
 private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
+private val availableCategoryColors = listOf(
+    Color(0xFFF1E27B),
+    Color(0xFFB8C9E8),
+    Color(0xFFE4BCD8),
+    Color(0xFFBFE6C4),
+    Color(0xFFF3C27A),
+    Color(0xFFC5B8E8),
+    Color(0xFFF0B59E)
+)
+
+private val availableCategoryIcons = listOf(
+    "tag",
+    "work",
+    "home",
+    "heart",
+    "star",
+    "book",
+    "cart",
+    "food"
+)
+
+private fun categoryIconForKey(key: String): ImageVector {
+    return when (key) {
+        "tag" -> Icons.Outlined.LocalOffer
+        "work" -> Icons.Outlined.Work
+        "home" -> Icons.Outlined.Home
+        "heart" -> Icons.Outlined.FavoriteBorder
+        "star" -> Icons.Outlined.Star
+        "book" -> Icons.Outlined.MenuBook
+        "cart" -> Icons.Outlined.ShoppingCart
+        "food" -> Icons.Outlined.Restaurant
+        "pin" -> Icons.Outlined.PushPin
+        "loop" -> Icons.Outlined.Autorenew
+        "cut" -> Icons.Outlined.ContentCut
+        "bolt" -> Icons.Outlined.Bolt
+        else -> Icons.Outlined.LocalOffer
+    }
+}
+
 private val defaultCategories = listOf(
-    TaskCategoryUi("personal", "Personal", Icons.Outlined.PushPin, Color(0xFFF1E27B)),
-    TaskCategoryUi("routine", "Rutina", Icons.Outlined.Autorenew, Color(0xFFB8C9E8)),
-    TaskCategoryUi("work", "Trabajo", Icons.Outlined.ContentCut, Color(0xFFBFE6C4)),
-    TaskCategoryUi("family", "Familia", Icons.Outlined.FavoriteBorder, Color(0xFFE4BCD8)),
-    TaskCategoryUi("urgent", "Urgente", Icons.Outlined.Bolt, Color(0xFFFFD2A0))
+    TaskCategoryUi("personal", "Personal", "pin", Color(0xFFF1E27B)),
+    TaskCategoryUi("routine", "Rutina", "loop", Color(0xFFB8C9E8)),
+    TaskCategoryUi("work", "Trabajo", "cut", Color(0xFFBFE6C4)),
+    TaskCategoryUi("family", "Familia", "heart", Color(0xFFE4BCD8)),
+    TaskCategoryUi("urgent", "Urgente", "bolt", Color(0xFFFFD2A0))
 )
 
 class MainActivity : ComponentActivity() {
@@ -175,7 +226,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun BoardHomeScreen() {
     val context = LocalContext.current
-    val categoriesById = remember { defaultCategories.associateBy { it.id } }
+    val categories = remember {
+        mutableStateListOf<TaskCategoryUi>().apply {
+            addAll(BoardLocalStore.loadCategories(context))
+        }
+    }
 
     val tasks = remember {
         mutableStateListOf<BoardTaskUi>().apply {
@@ -191,8 +246,10 @@ private fun BoardHomeScreen() {
     var appLanguage by remember { mutableStateOf(BoardLocalStore.loadLanguage(context)) }
     var dailyNotificationEnabled by remember { mutableStateOf(BoardLocalStore.loadDailyNotificationEnabled(context)) }
     var dailyNotificationTime by remember { mutableStateOf(BoardLocalStore.loadDailyNotificationTime(context)) }
+    var showManageCategories by remember { mutableStateOf(false) }
     var screenDragX by remember { mutableStateOf(0f) }
     var tabDirection by remember { mutableStateOf(1) }
+    val categoriesById = categories.associateBy { it.id }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -306,7 +363,7 @@ private fun BoardHomeScreen() {
                             contentPadding = PaddingValues(bottom = 118.dp)
                         ) {
                             itemsIndexed(tasksForSelectedDay, key = { _, task -> task.id }) { index, task ->
-                                val category = categoriesById[task.categoryId] ?: defaultCategories.first()
+                                val category = categoriesById[task.categoryId] ?: categories.first()
                                 StickyNoteCard(
                                     task = task,
                                     category = category,
@@ -329,6 +386,7 @@ private fun BoardHomeScreen() {
                         appLanguage = it
                         BoardLocalStore.saveLanguage(context, it)
                     },
+                    onOpenManageCategories = { showManageCategories = true },
                     dailyNotificationEnabled = dailyNotificationEnabled,
                     notificationTime = dailyNotificationTime,
                     onToggleDailyNotification = {
@@ -402,7 +460,7 @@ private fun BoardHomeScreen() {
         ) {
             AddTaskDialog(
                 language = appLanguage,
-                categories = defaultCategories,
+                categories = categories,
                 selectedDate = selectedDate,
                 onDismiss = { showAddDialog = false },
                 onCreate = { title, notes, categoryId, dueDate ->
@@ -426,7 +484,7 @@ private fun BoardHomeScreen() {
             ExpandedStickyTaskEditor(
                 language = appLanguage,
                 task = editingTask,
-                categories = defaultCategories,
+                categories = categories,
                 onDismiss = { editingTaskId = null },
                 onSave = { title, notes, categoryId ->
                     val index = tasks.indexOfFirst { it.id == editingTask.id }
@@ -462,6 +520,37 @@ private fun BoardHomeScreen() {
                 onSelectDate = {
                     selectedDate = it
                     showMonthPicker = false
+                }
+            )
+        }
+
+        if (showManageCategories) {
+            ManageCategoriesDialog(
+                language = appLanguage,
+                categories = categories,
+                onDismiss = { showManageCategories = false },
+                onCreateCategory = { label, iconKey, color ->
+                    val normalized = label.trim()
+                    if (normalized.isBlank()) return@ManageCategoriesDialog
+                    categories.add(
+                        TaskCategoryUi(
+                            id = UUID.randomUUID().toString(),
+                            label = normalized,
+                            iconKey = iconKey,
+                            color = color
+                        )
+                    )
+                    BoardLocalStore.saveCategories(context, categories)
+                },
+                onDeleteCategory = { categoryId ->
+                    if (categories.size <= 1) return@ManageCategoriesDialog
+                    val fallback = categories.firstOrNull { it.id != categoryId } ?: return@ManageCategoriesDialog
+                    tasks.replaceAll { task ->
+                        if (task.categoryId == categoryId) task.copy(categoryId = fallback.id) else task
+                    }
+                    categories.removeAll { it.id == categoryId }
+                    BoardLocalStore.saveTasks(context, tasks)
+                    BoardLocalStore.saveCategories(context, categories)
                 }
             )
         }
@@ -1416,6 +1505,7 @@ private fun ExpandedStickyTaskEditor(
 private fun SettingsScreen(
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
+    onOpenManageCategories: () -> Unit,
     dailyNotificationEnabled: Boolean,
     notificationTime: String,
     onToggleDailyNotification: (Boolean) -> Unit,
@@ -1585,7 +1675,7 @@ private fun SettingsScreen(
         }
 
         TextButton(
-            onClick = {},
+            onClick = onOpenManageCategories,
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
@@ -1609,6 +1699,229 @@ private fun SettingsScreen(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManageCategoriesDialog(
+    language: AppLanguage,
+    categories: List<TaskCategoryUi>,
+    onDismiss: () -> Unit,
+    onCreateCategory: (label: String, iconKey: String, color: Color) -> Unit,
+    onDeleteCategory: (categoryId: String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var selectedColor by remember { mutableStateOf(availableCategoryColors.first()) }
+    var selectedIconKey by remember { mutableStateOf(availableCategoryIcons.first()) }
+    val canCreate = name.trim().isNotBlank()
+
+    BackHandler(onBack = onDismiss)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.2f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            )
+            .statusBarsPadding()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFFF1F2F4))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    i18n(language, "Categorias", "Categories"),
+                    color = Color(0xFF2D374B),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "✕",
+                    color = Color(0xFF9CA5B6),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(onClick = onDismiss)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    i18n(language, "Crear categoria", "Create category"),
+                    color = Color(0xFF3A4356),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF8F9FB))
+                        .border(1.dp, Color(0xFFE6E8EE), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                ) {
+                    BasicTextField(
+                        value = name,
+                        onValueChange = { name = it.take(20) },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF2E374C)),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (name.isBlank()) {
+                                Text(
+                                    i18n(language, "Nombre", "Name"),
+                                    color = Color(0xFFB1B8C7),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                            inner()
+                        }
+                    )
+                }
+
+                Text(
+                    i18n(language, "Color del post-it", "Post-it color"),
+                    color = Color(0xFF7D879A),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    availableCategoryColors.forEach { color ->
+                        val selected = color == selectedColor
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .border(
+                                    width = if (selected) 2.dp else 1.dp,
+                                    color = if (selected) Color(0xFFF87533) else Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { selectedColor = color }
+                        )
+                    }
+                }
+
+                Text(
+                    i18n(language, "Icono", "Icon"),
+                    color = Color(0xFF7D879A),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(availableCategoryIcons) { iconKey ->
+                        val selected = iconKey == selectedIconKey
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    width = if (selected) 2.dp else 1.dp,
+                                    color = if (selected) Color(0xFFF87533) else Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { selectedIconKey = iconKey },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = categoryIconForKey(iconKey),
+                                contentDescription = null,
+                                tint = Color(0xFF5D6678),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                TextButton(
+                    onClick = {
+                        onCreateCategory(name, selectedIconKey, selectedColor)
+                        name = ""
+                    },
+                    enabled = canCreate,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (canCreate) Color(0xFFF5C2AB) else Color(0xFFF2DAD0))
+                ) {
+                    Text(
+                        i18n(language, "Agregar categoria", "Add category"),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Text(
+                i18n(language, "Categorias disponibles", "Available categories"),
+                color = Color(0xFF3A4356),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                categories.forEach { category ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(category.color),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = null,
+                                tint = Color(0xFF5D6678),
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            category.label,
+                            color = Color(0xFF3A4356),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            tint = if (categories.size > 1) Color(0xFF4A5568) else Color(0xFFC4CAD6),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(enabled = categories.size > 1) { onDeleteCategory(category.id) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -1853,6 +2166,7 @@ private object BoardLocalStore {
     private const val prefsName = "boardo_android"
     private const val keyTasks = "board_tasks_v1"
     private const val keyLanguage = "app_language_v1"
+    private const val keyCategories = "board_categories_v1"
     private const val keyDailyNotificationsEnabled = "daily_notifications_enabled_v1"
     private const val keyDailyNotificationTime = "daily_notification_time_v1"
 
@@ -1886,6 +2200,32 @@ private object BoardLocalStore {
         return output
     }
 
+    fun loadCategories(context: Context): List<TaskCategoryUi> {
+        val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val raw = prefs.getString(keyCategories, null) ?: return defaultCategories
+        val json = try {
+            JSONArray(raw)
+        } catch (_: Throwable) {
+            return defaultCategories
+        }
+
+        val output = mutableListOf<TaskCategoryUi>()
+        for (i in 0 until json.length()) {
+            val item = json.optJSONObject(i) ?: continue
+            val label = item.optString("label", "").trim()
+            if (label.isBlank()) continue
+            output.add(
+                TaskCategoryUi(
+                    id = item.optString("id", UUID.randomUUID().toString()),
+                    label = label,
+                    iconKey = item.optString("iconKey", "tag"),
+                    color = Color(item.optInt("colorArgb", Color(0xFFF1E27B).toArgb()))
+                )
+            )
+        }
+        return if (output.isEmpty()) defaultCategories else output
+    }
+
     fun saveTasks(context: Context, tasks: List<BoardTaskUi>) {
         val payload = JSONArray()
         tasks.forEach { task ->
@@ -1904,6 +2244,25 @@ private object BoardLocalStore {
         context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             .edit()
             .putString(keyTasks, payload.toString())
+            .apply()
+    }
+
+    fun saveCategories(context: Context, categories: List<TaskCategoryUi>) {
+        val payload = JSONArray()
+        categories.forEach { category ->
+            payload.put(
+                JSONObject().apply {
+                    put("id", category.id)
+                    put("label", category.label)
+                    put("iconKey", category.iconKey)
+                    put("colorArgb", category.color.toArgb())
+                }
+            )
+        }
+
+        context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .edit()
+            .putString(keyCategories, payload.toString())
             .apply()
     }
 
