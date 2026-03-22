@@ -980,10 +980,14 @@ private fun AddTaskDialog(
             ) {
                 items(categories) { category ->
                     val selected = category.id == selectedCategoryId
+                    val stickerInteraction = remember(category.id) { MutableInteractionSource() }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.clickable { selectedCategoryId = category.id }
+                        modifier = Modifier.clickable(
+                            interactionSource = stickerInteraction,
+                            indication = null
+                        ) { selectedCategoryId = category.id }
                     ) {
                         Box(
                             modifier = Modifier
