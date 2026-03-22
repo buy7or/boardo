@@ -8,7 +8,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -304,6 +306,11 @@ private fun MonthCalendarCard(
     val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
     val weeklyProgress = if (weeklyTotal > 0) weeklyCompleted.toFloat() / weeklyTotal.toFloat() else 0f
+    val animatedWeeklyProgress by animateFloatAsState(
+        targetValue = weeklyProgress.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 450),
+        label = "weekly_progress"
+    )
     val weeklyPercent = (weeklyProgress * 100).toInt()
     val monthTitle = selectedDate.format(SpanishMonthFormatter).replaceFirstChar {
         if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString()
@@ -423,7 +430,7 @@ private fun MonthCalendarCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(weeklyProgress.coerceIn(0f, 1f))
+                        .fillMaxWidth(animatedWeeklyProgress)
                         .height(4.dp)
                         .background(Color(0xFFF87533))
                 )
