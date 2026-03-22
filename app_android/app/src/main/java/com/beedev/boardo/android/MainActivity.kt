@@ -1,12 +1,24 @@
 package com.beedev.boardo.android
 
+import android.Manifest
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TimePickerDialog
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
+import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
@@ -64,6 +76,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,11 +99,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.beedev.boardo.android.ui.theme.BoardoTheme
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
@@ -172,6 +189,8 @@ private fun BoardHomeScreen() {
     var showMonthPicker by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(BoardTab.Board) }
     var appLanguage by remember { mutableStateOf(BoardLocalStore.loadLanguage(context)) }
+    var dailyNotificationEnabled by remember { mutableStateOf(BoardLocalStore.loadDailyNotificationEnabled(context)) }
+    var dailyNotificationTime by remember { mutableStateOf(BoardLocalStore.loadDailyNotificationTime(context)) }
     var screenDragX by remember { mutableStateOf(0f) }
     var tabDirection by remember { mutableStateOf(1) }
 
@@ -190,6 +209,14 @@ private fun BoardHomeScreen() {
 
     fun persist() {
         BoardLocalStore.saveTasks(context, tasks)
+    }
+
+    LaunchedEffect(dailyNotificationEnabled, dailyNotificationTime, appLanguage) {
+        DailyNotificationScheduler.sync(
+            context = context,
+            enabled = dailyNotificationEnabled,
+            time = dailyNotificationTime
+        )
     }
 
     val tabOrder = listOf(BoardTab.Board, BoardTab.Stats, BoardTab.Saved, BoardTab.Settings)
@@ -296,15 +323,25 @@ private fun BoardHomeScreen() {
                 }
 
                 BoardTab.Settings -> {
-                    SettingsScreen(
-                        language = appLanguage,
-                        onLanguageChange = {
-                            appLanguage = it
-                            BoardLocalStore.saveLanguage(context, it)
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .statusBarsPadding()
+                SettingsScreen(
+                    language = appLanguage,
+                    onLanguageChange = {
+                        appLanguage = it
+                        BoardLocalStore.saveLanguage(context, it)
+                    },
+                    dailyNotificationEnabled = dailyNotificationEnabled,
+                    notificationTime = dailyNotificationTime,
+                    onToggleDailyNotification = {
+                        dailyNotificationEnabled = it
+                        BoardLocalStore.saveDailyNotificationEnabled(context, it)
+                    },
+                    onNotificationTimeChange = {
+                        dailyNotificationTime = it
+                        BoardLocalStore.saveDailyNotificationTime(context, it)
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
                             .padding(horizontal = 12.dp)
                             .padding(top = 8.dp, bottom = 108.dp)
                     )
@@ -1379,10 +1416,24 @@ private fun ExpandedStickyTaskEditor(
 private fun SettingsScreen(
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
+    dailyNotificationEnabled: Boolean,
+    notificationTime: String,
+    onToggleDailyNotification: (Boolean) -> Unit,
+    onNotificationTimeChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var dailyNotificationEnabled by remember { mutableStateOf(false) }
-    var notificationTime by remember { mutableStateOf("09:00") }
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        onToggleDailyNotification(granted)
+    }
+
+    val parsedTime = try {
+        LocalTime.parse(notificationTime)
+    } catch (_: Throwable) {
+        LocalTime.of(9, 0)
+    }
 
     Column(
         modifier = modifier,
@@ -1438,7 +1489,23 @@ private fun SettingsScreen(
                 }
                 Switch(
                     checked = dailyNotificationEnabled,
-                    onCheckedChange = { dailyNotificationEnabled = it }
+                    onCheckedChange = { shouldEnable ->
+                        if (!shouldEnable) {
+                            onToggleDailyNotification(false)
+                        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            onToggleDailyNotification(true)
+                        } else {
+                            val granted = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (granted) {
+                                onToggleDailyNotification(true)
+                            } else {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+                    }
                 )
             }
 
@@ -1446,6 +1513,17 @@ private fun SettingsScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFF6F7FA))
+                    .clickable {
+                        TimePickerDialog(
+                            context,
+                            { _, hourOfDay, minute ->
+                                onNotificationTimeChange(String.format(Locale.US, "%02d:%02d", hourOfDay, minute))
+                            },
+                            parsedTime.hour,
+                            parsedTime.minute,
+                            true
+                        ).show()
+                    }
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -1639,10 +1717,144 @@ private fun computeStreak(tasks: List<BoardTaskUi>, referenceDate: LocalDate = L
     return streak
 }
 
+private object DailyNotificationScheduler {
+    private const val channelId = "boardo_daily_motivation"
+    private const val channelName = "Daily Motivation"
+    private const val notificationId = 1101
+    private const val alarmRequestCode = 6011
+
+    fun sync(context: Context, enabled: Boolean, time: String) {
+        if (enabled) {
+            schedule(context, time)
+        } else {
+            cancel(context)
+        }
+    }
+
+    fun schedule(context: Context, time: String) {
+        ensureChannel(context)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val triggerAtMillis = computeNextTriggerMillis(time)
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP,
+            triggerAtMillis,
+            AlarmManager.INTERVAL_DAY,
+            alarmPendingIntent(context)
+        )
+    }
+
+    fun cancel(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(alarmPendingIntent(context))
+        NotificationManagerCompat.from(context).cancel(notificationId)
+    }
+
+    fun showNotification(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) return
+        }
+
+        ensureChannel(context)
+
+        val language = BoardLocalStore.loadLanguage(context)
+        val title = i18n(language, "No pierdas tu racha", "Don't lose your streak")
+        val message = i18n(
+            language,
+            "Hoy es un gran dia para completar tu tarea y mantener el ritmo.",
+            "Today is a great day to complete your task and keep your streak alive."
+        )
+
+        val openAppIntent = Intent(context, MainActivity::class.java)
+        val contentPendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(contentPendingIntent)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
+    }
+
+    private fun alarmPendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, DailyNotificationReceiver::class.java)
+        return PendingIntent.getBroadcast(
+            context,
+            alarmRequestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun computeNextTriggerMillis(time: String): Long {
+        val now = java.time.ZonedDateTime.now()
+        val localTime = try {
+            LocalTime.parse(time)
+        } catch (_: Throwable) {
+            LocalTime.of(9, 0)
+        }
+        var trigger = now.withHour(localTime.hour).withMinute(localTime.minute).withSecond(0).withNano(0)
+        if (!trigger.isAfter(now)) {
+            trigger = trigger.plusDays(1)
+        }
+        return trigger.toInstant().toEpochMilli()
+    }
+
+    private fun ensureChannel(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        manager.createNotificationChannel(channel)
+    }
+}
+
+class DailyNotificationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        DailyNotificationScheduler.showNotification(context)
+    }
+}
+
+class DailyNotificationBootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val action = intent?.action ?: return
+        if (
+            action == Intent.ACTION_BOOT_COMPLETED ||
+            action == Intent.ACTION_MY_PACKAGE_REPLACED ||
+            action == Intent.ACTION_TIME_CHANGED ||
+            action == Intent.ACTION_TIMEZONE_CHANGED
+        ) {
+            DailyNotificationScheduler.sync(
+                context = context,
+                enabled = BoardLocalStore.loadDailyNotificationEnabled(context),
+                time = BoardLocalStore.loadDailyNotificationTime(context)
+            )
+        }
+    }
+}
+
 private object BoardLocalStore {
     private const val prefsName = "boardo_android"
     private const val keyTasks = "board_tasks_v1"
     private const val keyLanguage = "app_language_v1"
+    private const val keyDailyNotificationsEnabled = "daily_notifications_enabled_v1"
+    private const val keyDailyNotificationTime = "daily_notification_time_v1"
 
     fun loadTasks(context: Context): List<BoardTaskUi> {
         val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
@@ -1706,6 +1918,31 @@ private object BoardLocalStore {
         context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             .edit()
             .putString(keyLanguage, value)
+            .apply()
+    }
+
+    fun loadDailyNotificationEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .getBoolean(keyDailyNotificationsEnabled, false)
+    }
+
+    fun saveDailyNotificationEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(keyDailyNotificationsEnabled, enabled)
+            .apply()
+    }
+
+    fun loadDailyNotificationTime(context: Context): String {
+        return context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .getString(keyDailyNotificationTime, "09:00")
+            ?: "09:00"
+    }
+
+    fun saveDailyNotificationTime(context: Context, time: String) {
+        context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            .edit()
+            .putString(keyDailyNotificationTime, time)
             .apply()
     }
 }
