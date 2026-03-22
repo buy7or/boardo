@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,18 +43,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Autorenew
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -109,6 +112,13 @@ data class BoardTaskUi(
     val isCompleted: Boolean
 )
 
+private enum class BoardTab {
+    Board,
+    Stats,
+    Saved,
+    Settings
+}
+
 private val StickyFont = FontFamily(Typeface.create("casual", Typeface.NORMAL))
 private val SpanishMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES"))
 
@@ -149,6 +159,7 @@ private fun BoardHomeScreen() {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingTaskId by remember { mutableStateOf<String?>(null) }
     var showMonthPicker by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(BoardTab.Board) }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -170,60 +181,78 @@ private fun BoardHomeScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F3F5))
+            .background(if (selectedTab == BoardTab.Settings) Color(0xFFF9FAFC) else Color(0xFFF3F3F5))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(horizontal = 12.dp)
-                .padding(top = 8.dp)
-        ) {
-            MonthCalendarCard(
-                selectedDate = selectedDate,
-                taskDates = taskDates,
-                weeklyCompleted = weeklyCompleted,
-                weeklyTotal = weeklyTotal,
-                onSelectDate = { selectedDate = it },
-                onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
-                onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
-                onOpenMonthPicker = { showMonthPicker = true }
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-            StreakCard(days = streakCount)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 118.dp)
-            ) {
-                itemsIndexed(tasksForSelectedDay, key = { _, task -> task.id }) { index, task ->
-                    val category = categoriesById[task.categoryId] ?: defaultCategories.first()
-                    StickyNoteCard(
-                        task = task,
-                        category = category,
-                        rotation = if (index % 2 == 0) -1.3f else 1f,
-                        onOpen = { editingTaskId = task.id }
+        when (selectedTab) {
+            BoardTab.Board -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 8.dp)
+                ) {
+                    MonthCalendarCard(
+                        selectedDate = selectedDate,
+                        taskDates = taskDates,
+                        weeklyCompleted = weeklyCompleted,
+                        weeklyTotal = weeklyTotal,
+                        onSelectDate = { selectedDate = it },
+                        onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
+                        onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
+                        onOpenMonthPicker = { showMonthPicker = true }
                     )
-                }
 
-                item {
-                    AddNoteCard(onClick = { showAddDialog = true })
+                    Spacer(modifier = Modifier.height(10.dp))
+                    StreakCard(days = streakCount)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(bottom = 118.dp)
+                    ) {
+                        itemsIndexed(tasksForSelectedDay, key = { _, task -> task.id }) { index, task ->
+                            val category = categoriesById[task.categoryId] ?: defaultCategories.first()
+                            StickyNoteCard(
+                                task = task,
+                                category = category,
+                                rotation = if (index % 2 == 0) -0.2f else 0.2f,
+                                onOpen = { editingTaskId = task.id }
+                            )
+                        }
+
+                        item {
+                            AddNoteCard(onClick = { showAddDialog = true })
+                        }
+                    }
                 }
             }
+
+            BoardTab.Settings -> {
+                SettingsScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 8.dp, bottom = 108.dp)
+                )
+            }
+
+            else -> Unit
         }
 
         BottomBoardNav(
+            selectedTab = selectedTab,
+            onSelectTab = { selectedTab = it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 12.dp, vertical = 14.dp)
         )
 
         AnimatedVisibility(
-            visible = showAddDialog,
+            visible = showAddDialog && selectedTab == BoardTab.Board,
             enter = fadeIn(animationSpec = tween(220)) + scaleIn(
                 animationSpec = tween(220),
                 initialScale = 0.96f
@@ -284,7 +313,7 @@ private fun BoardHomeScreen() {
             )
         }
 
-        if (showMonthPicker) {
+        if (showMonthPicker && selectedTab == BoardTab.Board) {
             MonthPickerOverlay(
                 selectedDate = selectedDate,
                 taskDates = taskDates,
@@ -643,36 +672,66 @@ private fun MonthPickerOverlay(
 
 @Composable
 private fun StreakCard(days: Int) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color(0xFFF1E27B), shape = RoundedCornerShape(12.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFF1E27B))
     ) {
         Box(
             modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFFFE6A6)),
-            contentAlignment = Alignment.Center
+                .align(Alignment.TopCenter)
+                .width(28.dp)
+                .height(5.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color.White.copy(alpha = 0.5f))
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.LocalFireDepartment,
-                contentDescription = "Racha",
-                tint = Color(0xFFF87533),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Column {
-            Text("Racha diaria", style = MaterialTheme.typography.labelMedium, color = Color(0xFF5B6578))
-            Text(
-                "$days dias seguidos",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E2533)
-            )
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFFE6A6))
+                    .drawBehind {
+                        drawCircle(
+                            color = Color(0xFFF39B5F),
+                            style = Stroke(
+                                width = 1.8.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
+                            )
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.LocalFireDepartment,
+                    contentDescription = "Racha",
+                    tint = Color(0xFFF87533),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column {
+                Text(
+                    "Racha diaria",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF7A889D),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Racha de $days dias",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF2F3A4E),
+                    fontFamily = StickyFont
+                )
+            }
         }
     }
 }
@@ -681,7 +740,7 @@ private fun StreakCard(days: Int) {
 private fun StickyNoteCard(task: BoardTaskUi, category: TaskCategoryUi, rotation: Float, onOpen: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(126.dp)
@@ -690,36 +749,51 @@ private fun StickyNoteCard(task: BoardTaskUi, category: TaskCategoryUi, rotation
             .clip(shape)
             .background(category.color)
             .clickable(onClick = onOpen)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = task.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF30384A),
-            textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-            fontFamily = StickyFont
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 2.dp)
+                .width(30.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color.White.copy(alpha = 0.45f))
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
-                text = category.boardTag,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF8C96A8),
-                fontWeight = FontWeight.Black,
+                text = task.title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF30384A),
+                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                 fontFamily = StickyFont
             )
-            Spacer(modifier = Modifier.weight(1f))
-            if (task.isCompleted) {
-                Text("✓", color = Color(0xFF8C96A8))
-            } else {
-                Icon(
-                    imageVector = category.icon,
-                    contentDescription = category.label,
-                    tint = Color(0xFF7E8899),
-                    modifier = Modifier.size(16.dp)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = category.boardTag,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF8C96A8),
+                    fontWeight = FontWeight.Black,
+                    fontFamily = StickyFont
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                if (task.isCompleted) {
+                    Text("✓", color = Color(0xFF8C96A8))
+                } else {
+                    Icon(
+                        imageVector = category.icon,
+                        contentDescription = category.label,
+                        tint = Color(0xFF7E8899),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -729,7 +803,7 @@ private fun StickyNoteCard(task: BoardTaskUi, category: TaskCategoryUi, rotation
 private fun AddNoteCard(onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(126.dp)
@@ -738,32 +812,45 @@ private fun AddNoteCard(onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .drawBehind {
                 drawRoundRect(
-                    color = Color(0xFFD8D8DC),
+                    color = Color(0xFFD4D8E0),
                     cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
-                    style = Stroke(width = 1.8.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f))
+                    style = Stroke(width = 1.7.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(9f, 7f), 0f))
                 )
-            }
-            .padding(12.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            },
     ) {
         Box(
             modifier = Modifier
-                .size(54.dp)
-                .background(Color(0xFFF87533), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(
-            "NEW NOTE",
-            color = Color(0xFF8B95A8),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Black,
-            fontFamily = StickyFont
+                .align(Alignment.TopCenter)
+                .padding(top = 2.dp)
+                .width(30.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color.White.copy(alpha = 0.65f))
         )
+
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                .background(Color(0xFFF87533), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                "NUEVA NOTA",
+                color = Color(0xFF8B95A8),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                fontFamily = StickyFont
+            )
+        }
     }
 }
 
@@ -1160,32 +1247,208 @@ private fun ExpandedStickyTaskEditor(
 }
 
 @Composable
-private fun BottomBoardNav(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFFFCFCFD))
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+private fun SettingsScreen(modifier: Modifier = Modifier) {
+    var dailyNotificationEnabled by remember { mutableStateOf(false) }
+    var language by remember { mutableStateOf("es") }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        BottomNavItem(icon = { Icon(Icons.Default.Home, null) }, label = "Board", selected = true)
-        BottomNavItem(icon = { Icon(Icons.Default.CheckCircle, null) }, label = "Schedule", selected = false)
-        BottomNavItem(icon = { Icon(Icons.Default.Settings, null) }, label = "Settings", selected = false)
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            "Ajustes",
+            color = Color(0xFF2E374C),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Text(
+            "Configura la notificacion diaria y activa el\nrecordatorio.",
+            color = Color(0xFF9AA4B8),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .border(1.dp, Color(0xFFF0F2F6), RoundedCornerShape(16.dp))
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Notificacion diaria",
+                        color = Color(0xFF2E374C),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        "Recibe un recordatorio cada dia a la\nhora elegida.",
+                        color = Color(0xFF9CA6B9),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Switch(
+                    checked = dailyNotificationEnabled,
+                    onCheckedChange = { dailyNotificationEnabled = it }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF6F7FA))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    "09:00",
+                    color = Color(0xFF7F899E),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .border(1.dp, Color(0xFFF0F2F6), RoundedCornerShape(16.dp))
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                "Idioma de la app",
+                color = Color(0xFF2E374C),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFF1F3F7))
+                    .padding(2.dp)
+            ) {
+                val esSelected = language == "es"
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (esSelected) Color.White else Color.Transparent)
+                        .clickable { language = "es" }
+                        .padding(vertical = 7.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Espanol", fontWeight = FontWeight.Bold, color = Color(0xFF3B4457))
+                }
+                val enSelected = language == "en"
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (enSelected) Color.White else Color.Transparent)
+                        .clickable { language = "en" }
+                        .padding(vertical = 7.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Ingles", fontWeight = FontWeight.Bold, color = Color(0xFF3B4457))
+                }
+            }
+        }
+
+        TextButton(
+            onClick = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color(0xFFF7F8FA))
+                .drawBehind {
+                    drawRoundRect(
+                        color = Color(0xFFF0CFC2),
+                        cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
+                        style = Stroke(width = 1.5.dp.toPx())
+                    )
+                }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Outlined.Apps, contentDescription = null, tint = Color(0xFFF07640), modifier = Modifier.size(18.dp))
+                Text(
+                    "Gestionar categorias",
+                    color = Color(0xFFF07640),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun BottomNavItem(icon: @Composable () -> Unit, label: String, selected: Boolean) {
-    val color = if (selected) Color(0xFFF87533) else Color(0xFF9CA5B6)
+private fun BottomBoardNav(selectedTab: BoardTab, onSelectTab: (BoardTab) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(10.dp, RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(22.dp))
+            .background(Color(0xFFF7F8FA))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BottomNavItem(
+            icon = Icons.Outlined.Apps,
+            selected = selectedTab == BoardTab.Board,
+            onClick = { onSelectTab(BoardTab.Board) }
+        )
+        BottomNavItem(
+            icon = Icons.Outlined.BarChart,
+            selected = selectedTab == BoardTab.Stats,
+            onClick = { onSelectTab(BoardTab.Stats) }
+        )
+        BottomNavItem(
+            icon = Icons.Outlined.BookmarkBorder,
+            selected = selectedTab == BoardTab.Saved,
+            onClick = { onSelectTab(BoardTab.Saved) }
+        )
+        BottomNavItem(
+            icon = Icons.Outlined.Settings,
+            selected = selectedTab == BoardTab.Settings,
+            onClick = { onSelectTab(BoardTab.Settings) }
+        )
+    }
+}
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Box(contentAlignment = Alignment.Center) {
-            icon()
-        }
-        Text(label, color = color, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+@Composable
+private fun BottomNavItem(icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
+    val iconTint = if (selected) Color(0xFFF87533) else Color(0xFF8F99AC)
+    val itemBackground = if (selected) Color(0xFFFBE7DD) else Color.Transparent
+
+    Box(
+        modifier = Modifier
+            .size(width = 78.dp, height = 44.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(itemBackground)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 
