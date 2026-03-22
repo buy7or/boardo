@@ -152,6 +152,14 @@ private fun BoardHomeScreen() {
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
     val streakCount = computeStreak(tasks)
     val editingTask = tasks.firstOrNull { it.id == editingTaskId }
+    val weekStart = selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+    val weekEnd = weekStart.plusDays(6)
+    val weekTasks = tasks.filter { task ->
+        val dueDate = task.dueDate ?: return@filter false
+        !dueDate.isBefore(weekStart) && !dueDate.isAfter(weekEnd)
+    }
+    val weeklyTotal = weekTasks.size
+    val weeklyCompleted = weekTasks.count { it.isCompleted }
 
     fun persist() {
         BoardLocalStore.saveTasks(context, tasks)
@@ -172,6 +180,8 @@ private fun BoardHomeScreen() {
             MonthCalendarCard(
                 selectedDate = selectedDate,
                 taskDates = taskDates,
+                weeklyCompleted = weeklyCompleted,
+                weeklyTotal = weeklyTotal,
                 onSelectDate = { selectedDate = it },
                 onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
                 onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
@@ -280,6 +290,8 @@ private fun BoardHomeScreen() {
 private fun MonthCalendarCard(
     selectedDate: LocalDate,
     taskDates: Set<LocalDate>,
+    weeklyCompleted: Int,
+    weeklyTotal: Int,
     onSelectDate: (LocalDate) -> Unit,
     onMovePreviousWeek: () -> Unit,
     onMoveNextWeek: () -> Unit,
@@ -291,6 +303,8 @@ private fun MonthCalendarCard(
     val startOfWeek = selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
     val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
+    val weeklyProgress = if (weeklyTotal > 0) weeklyCompleted.toFloat() / weeklyTotal.toFloat() else 0f
+    val weeklyPercent = (weeklyProgress * 100).toInt()
     val monthTitle = selectedDate.format(SpanishMonthFormatter).replaceFirstChar {
         if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString()
     }
@@ -381,6 +395,54 @@ private fun MonthCalendarCard(
                 }
             }
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFFE8EBF1))
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Progreso semanal",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFF8E99AE),
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xFFE2E6EE))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(weeklyProgress.coerceIn(0f, 1f))
+                        .height(4.dp)
+                        .background(Color(0xFFF87533))
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                "$weeklyCompleted/$weeklyTotal",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFFF87533),
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Text(
+            "$weeklyPercent% completado esta semana",
+            style = MaterialTheme.typography.labelSmall,
+            color = Color(0xFFB0B8C7),
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
