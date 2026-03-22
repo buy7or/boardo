@@ -73,10 +73,12 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.LocalOffer
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Restaurant
@@ -159,10 +161,19 @@ data class BoardTaskUi(
     val isCompleted: Boolean
 )
 
+private data class AchievementUi(
+    val title: String,
+    val description: String,
+    val progress: Int,
+    val target: Int,
+    val icon: ImageVector,
+    val color: Color
+)
+
 private enum class BoardTab {
     Board,
     Stats,
-    Saved,
+    Achievements,
     Settings
 }
 
@@ -300,6 +311,31 @@ private fun BoardHomeScreen() {
     val longestStreak = computeLongestStreak(tasks)
     val bestDay = computeDayWithMostTasks(tasks)
     val bestWeek = computeWeekWithMostTasks(tasks)
+    val daysWithTasks = tasks.mapNotNull { it.dueDate }.toSet().size
+    val completedDaysCount = tasks.asSequence()
+        .filter { it.isCompleted && it.dueDate != null }
+        .mapNotNull { it.dueDate }
+        .toSet()
+        .size
+    val maxTasksInDay = tasks.asSequence()
+        .mapNotNull { it.dueDate }
+        .groupingBy { it }
+        .eachCount()
+        .values
+        .maxOrNull() ?: 0
+    val weeklyBuckets = tasks.asSequence()
+        .mapNotNull { it.dueDate }
+        .groupBy { it.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) }
+    val weeklyCompletionRatios = weeklyBuckets.mapValues { (weekStart, _) ->
+        val weekEnd = weekStart.plusDays(6)
+        val weekItems = tasks.filter { task ->
+            val dueDate = task.dueDate ?: return@filter false
+            !dueDate.isBefore(weekStart) && !dueDate.isAfter(weekEnd)
+        }
+        if (weekItems.isEmpty()) 0f else weekItems.count { it.isCompleted }.toFloat() / weekItems.size.toFloat()
+    }
+    val weeksAbove80 = weeklyCompletionRatios.values.count { it >= 0.8f }
+    val perfectWeeks = weeklyCompletionRatios.values.count { it >= 1f }
 
     fun persist() {
         BoardLocalStore.saveTasks(context, tasks)
@@ -313,7 +349,7 @@ private fun BoardHomeScreen() {
         )
     }
 
-    val tabOrder = listOf(BoardTab.Board, BoardTab.Stats, BoardTab.Saved, BoardTab.Settings)
+    val tabOrder = listOf(BoardTab.Board, BoardTab.Stats, BoardTab.Achievements, BoardTab.Settings)
     fun navigateToTab(target: BoardTab) {
         val currentIndex = tabOrder.indexOf(selectedTab)
         val targetIndex = tabOrder.indexOf(target)
@@ -462,14 +498,19 @@ private fun BoardHomeScreen() {
                     )
                 }
 
-                BoardTab.Saved -> {
-                    PlaceholderScreen(
-                        title = i18n(appLanguage, "Guardados", "Saved"),
-                        subtitle = i18n(
-                            appLanguage,
-                            "Desliza para cambiar entre pantallas.",
-                            "Swipe to move between screens."
-                        ),
+                BoardTab.Achievements -> {
+                    AchievementsScreen(
+                        language = appLanguage,
+                        totalTasks = tasks.size,
+                        completedTasks = completedTasksCount,
+                        currentStreak = streakCount,
+                        longestStreak = longestStreak,
+                        weeklyPercent = weeklyPercent,
+                        daysWithTasks = daysWithTasks,
+                        completedDays = completedDaysCount,
+                        weeksAbove80 = weeksAbove80,
+                        perfectWeeks = perfectWeeks,
+                        maxTasksInDay = maxTasksInDay,
                         modifier = Modifier
                             .fillMaxSize()
                             .statusBarsPadding()
@@ -2193,6 +2234,176 @@ private fun StatStickyCard(title: String, value: String, color: Color, icon: Ima
 }
 
 @Composable
+private fun AchievementsScreen(
+    language: AppLanguage,
+    totalTasks: Int,
+    completedTasks: Int,
+    currentStreak: Int,
+    longestStreak: Int,
+    weeklyPercent: Int,
+    daysWithTasks: Int,
+    completedDays: Int,
+    weeksAbove80: Int,
+    perfectWeeks: Int,
+    maxTasksInDay: Int,
+    modifier: Modifier = Modifier
+) {
+    val achievements = listOf(
+        AchievementUi(i18n(language, "Primer paso", "First step"), i18n(language, "Completa tu primera tarea.", "Complete your first task."), completedTasks, 1, Icons.Outlined.Star, Color(0xFFF1E27B)),
+        AchievementUi(i18n(language, "En marcha", "In motion"), i18n(language, "Completa 10 tareas.", "Complete 10 tasks."), completedTasks, 10, Icons.Outlined.TaskAlt, Color(0xFFB8C9E8)),
+        AchievementUi(i18n(language, "Constancia", "Consistency"), i18n(language, "Manten una racha de 3 dias.", "Keep a 3-day streak."), currentStreak, 3, Icons.Outlined.LocalFireDepartment, Color(0xFFBFE6C4)),
+        AchievementUi(i18n(language, "Imparable", "Unstoppable"), i18n(language, "Manten una racha de 7 dias.", "Keep a 7-day streak."), currentStreak, 7, Icons.Outlined.Bolt, Color(0xFFE4BCD8)),
+        AchievementUi(i18n(language, "Semana solida", "Solid week"), i18n(language, "Alcanza 80%% de progreso semanal.", "Reach 80%% weekly progress."), weeklyPercent, 80, Icons.Outlined.BarChart, Color(0xFFF3D9B9)),
+        AchievementUi(i18n(language, "Organizado", "Organized"), i18n(language, "Crea 25 tareas.", "Create 25 tasks."), totalTasks, 25, Icons.Outlined.Apps, Color(0xFFD9CDEE)),
+        AchievementUi(i18n(language, "Enfocado", "Focused"), i18n(language, "Crea 50 tareas.", "Create 50 tasks."), totalTasks, 50, Icons.Outlined.Work, Color(0xFFF1E27B)),
+        AchievementUi(i18n(language, "Productivo", "Productive"), i18n(language, "Completa 25 tareas.", "Complete 25 tasks."), completedTasks, 25, Icons.Outlined.TaskAlt, Color(0xFFB8C9E8)),
+        AchievementUi(i18n(language, "Maestria", "Mastery"), i18n(language, "Completa 100 tareas.", "Complete 100 tasks."), completedTasks, 100, Icons.Outlined.Star, Color(0xFFBFE6C4)),
+        AchievementUi(i18n(language, "Sin romper cadena", "Chain keeper"), i18n(language, "Logra una racha maxima de 14 dias.", "Reach a max streak of 14 days."), longestStreak, 14, Icons.Outlined.LocalFireDepartment, Color(0xFFE4BCD8)),
+        AchievementUi(i18n(language, "Legendario", "Legendary"), i18n(language, "Logra una racha maxima de 30 dias.", "Reach a max streak of 30 days."), longestStreak, 30, Icons.Outlined.LocalFireDepartment, Color(0xFFF3D9B9)),
+        AchievementUi(i18n(language, "Presencia diaria", "Daily presence"), i18n(language, "Ten tareas en 7 dias distintos.", "Have tasks on 7 different days."), daysWithTasks, 7, Icons.Outlined.Today, Color(0xFFD9CDEE)),
+        AchievementUi(i18n(language, "Calendario activo", "Active calendar"), i18n(language, "Ten tareas en 30 dias distintos.", "Have tasks on 30 different days."), daysWithTasks, 30, Icons.Outlined.Event, Color(0xFFF1E27B)),
+        AchievementUi(i18n(language, "Semanas fuertes", "Strong weeks"), i18n(language, "Consigue 3 semanas con 80%%+.", "Get 3 weeks at 80%%+."), weeksAbove80, 3, Icons.Outlined.BarChart, Color(0xFFB8C9E8)),
+        AchievementUi(i18n(language, "Modo disciplina", "Discipline mode"), i18n(language, "Consigue 8 semanas con 80%%+.", "Get 8 weeks at 80%%+."), weeksAbove80, 8, Icons.Outlined.BarChart, Color(0xFFBFE6C4)),
+        AchievementUi(i18n(language, "Cierre perfecto", "Perfect closure"), i18n(language, "Completa 5 semanas al 100%%.", "Complete 5 weeks at 100%%."), perfectWeeks, 5, Icons.Outlined.TaskAlt, Color(0xFFE4BCD8)),
+        AchievementUi(i18n(language, "Multiplicador", "Multiplier"), i18n(language, "Haz 5 tareas en un solo dia.", "Do 5 tasks in one day."), maxTasksInDay, 5, Icons.Outlined.Bolt, Color(0xFFF3D9B9)),
+        AchievementUi(i18n(language, "Maraton", "Marathon"), i18n(language, "Crea 200 tareas.", "Create 200 tasks."), totalTasks, 200, Icons.Outlined.Work, Color(0xFFD9CDEE)),
+        AchievementUi(i18n(language, "Rutina real", "Real routine"), i18n(language, "Completa tareas en 60 dias.", "Complete tasks on 60 days."), completedDays, 60, Icons.Outlined.Today, Color(0xFFF1E27B)),
+        AchievementUi(i18n(language, "Elite", "Elite"), i18n(language, "Completa tareas en 120 dias.", "Complete tasks on 120 days."), completedDays, 120, Icons.Outlined.EmojiEvents, Color(0xFFB8C9E8))
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            i18n(language, "Logros", "Achievements"),
+            color = Color(0xFF2E374C),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+            i18n(language, "Tu progreso y constancia", "Your progress and consistency"),
+            color = Color(0xFF9AA4B8),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        androidx.compose.foundation.lazy.LazyColumn(
+            contentPadding = PaddingValues(bottom = 118.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(achievements) { achievement ->
+                AchievementCard(achievement = achievement)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AchievementCard(achievement: AchievementUi) {
+    val progress = achievement.progress.coerceAtLeast(0)
+    val target = achievement.target.coerceAtLeast(1)
+    val shownProgress = progress.coerceAtMost(target)
+    val ratio = (progress.toFloat() / target.toFloat()).coerceIn(0f, 1f)
+    val percent = (ratio * 100f).toInt()
+    val unlocked = progress >= target
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(achievement.color)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .width(30.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color.White.copy(alpha = 0.38f))
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.72f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = achievement.icon,
+                        contentDescription = null,
+                        tint = Color(0xFFF87533),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        achievement.title,
+                        color = Color(0xFF2F3A4E),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        achievement.description,
+                        color = Color(0xFF7F8CA4),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                if (unlocked) {
+                    Text("✦", color = Color(0xFFF87533), fontWeight = FontWeight.Bold)
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFF9CA5B6),
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("$shownProgress/$target", color = Color(0xFF5C6473), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.weight(1f))
+                Text("$percent%", color = Color(0xFF5C6473), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color.White.copy(alpha = 0.56f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(ratio)
+                        .height(8.dp)
+                        .background(if (unlocked) Color(0xFFF87533) else Color(0xFFAAB7CE))
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun BottomBoardNav(selectedTab: BoardTab, onSelectTab: (BoardTab) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
@@ -2215,9 +2426,9 @@ private fun BottomBoardNav(selectedTab: BoardTab, onSelectTab: (BoardTab) -> Uni
             onClick = { onSelectTab(BoardTab.Stats) }
         )
         BottomNavItem(
-            icon = Icons.Outlined.BookmarkBorder,
-            selected = selectedTab == BoardTab.Saved,
-            onClick = { onSelectTab(BoardTab.Saved) }
+            icon = Icons.Outlined.EmojiEvents,
+            selected = selectedTab == BoardTab.Achievements,
+            onClick = { onSelectTab(BoardTab.Achievements) }
         )
         BottomNavItem(
             icon = Icons.Outlined.Settings,
