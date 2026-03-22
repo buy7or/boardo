@@ -15,6 +15,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -390,6 +392,7 @@ private fun MonthPickerOverlay(
     onSelectDate: (LocalDate) -> Unit
 ) {
     var visibleMonth by remember(selectedDate) { mutableStateOf(YearMonth.from(selectedDate)) }
+    var dragX by remember { mutableStateOf(0f) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
     val monthTitle = visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES")))
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString() }
@@ -422,6 +425,21 @@ private fun MonthPickerOverlay(
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFFF8F9FB))
                 .clickable { }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, amount ->
+                            dragX += amount
+                        },
+                        onDragEnd = {
+                            when {
+                                dragX <= -80f -> visibleMonth = visibleMonth.plusMonths(1)
+                                dragX >= 80f -> visibleMonth = visibleMonth.minusMonths(1)
+                            }
+                            dragX = 0f
+                        },
+                        onDragCancel = { dragX = 0f }
+                    )
+                }
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
