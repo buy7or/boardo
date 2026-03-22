@@ -222,7 +222,17 @@ private fun BoardHomeScreen() {
                 .padding(horizontal = 12.dp, vertical = 14.dp)
         )
 
-        if (showAddDialog) {
+        AnimatedVisibility(
+            visible = showAddDialog,
+            enter = fadeIn(animationSpec = tween(220)) + scaleIn(
+                animationSpec = tween(220),
+                initialScale = 0.96f
+            ),
+            exit = fadeOut(animationSpec = tween(180)) + scaleOut(
+                animationSpec = tween(180),
+                targetScale = 0.98f
+            )
+        ) {
             AddTaskDialog(
                 categories = defaultCategories,
                 selectedDate = selectedDate,
