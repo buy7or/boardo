@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -1803,11 +1804,13 @@ private fun ManageCategoriesDialog(
                 }
             )
             .statusBarsPadding()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.94f)
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFFF1F2F4))
                 .clickable(
@@ -1966,7 +1969,7 @@ private fun ManageCategoriesDialog(
             androidx.compose.foundation.lazy.LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 260.dp),
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(categories, key = { it.id }) { category ->
