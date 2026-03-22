@@ -15,6 +15,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -266,6 +267,8 @@ private fun MonthCalendarCard(
     onMovePreviousWeek: () -> Unit,
     onMoveNextWeek: () -> Unit
 ) {
+    val previousInteraction = remember { MutableInteractionSource() }
+    val nextInteraction = remember { MutableInteractionSource() }
     val startOfWeek = selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
     val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
@@ -285,8 +288,13 @@ private fun MonthCalendarCard(
             Text(
                 "‹",
                 color = Color(0xFF8B95A8),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.clickable(onClick = onMovePreviousWeek)
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable(
+                    interactionSource = previousInteraction,
+                    indication = null,
+                    onClick = onMovePreviousWeek
+                )
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
@@ -299,8 +307,13 @@ private fun MonthCalendarCard(
             Text(
                 "›",
                 color = Color(0xFF8B95A8),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.clickable(onClick = onMoveNextWeek)
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable(
+                    interactionSource = nextInteraction,
+                    indication = null,
+                    onClick = onMoveNextWeek
+                )
             )
         }
 
@@ -313,8 +326,12 @@ private fun MonthCalendarCard(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             weekDates.forEach { date ->
                 val selected = date == selectedDate
+                val dayInteraction = remember(date) { MutableInteractionSource() }
                 Column(
-                    modifier = Modifier.clickable { onSelectDate(date) },
+                    modifier = Modifier.clickable(
+                        interactionSource = dayInteraction,
+                        indication = null
+                    ) { onSelectDate(date) },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
