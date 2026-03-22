@@ -81,6 +81,7 @@ import org.json.JSONObject
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import java.util.UUID
@@ -143,6 +144,7 @@ private fun BoardHomeScreen() {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editingTaskId by remember { mutableStateOf<String?>(null) }
+    var showMonthPicker by remember { mutableStateOf(false) }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -170,7 +172,8 @@ private fun BoardHomeScreen() {
                 taskDates = taskDates,
                 onSelectDate = { selectedDate = it },
                 onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
-                onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) }
+                onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
+                onOpenMonthPicker = { showMonthPicker = true }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -256,6 +259,18 @@ private fun BoardHomeScreen() {
                 }
             )
         }
+
+        if (showMonthPicker) {
+            MonthPickerOverlay(
+                selectedDate = selectedDate,
+                taskDates = taskDates,
+                onDismiss = { showMonthPicker = false },
+                onSelectDate = {
+                    selectedDate = it
+                    showMonthPicker = false
+                }
+            )
+        }
     }
 }
 
@@ -265,10 +280,12 @@ private fun MonthCalendarCard(
     taskDates: Set<LocalDate>,
     onSelectDate: (LocalDate) -> Unit,
     onMovePreviousWeek: () -> Unit,
-    onMoveNextWeek: () -> Unit
+    onMoveNextWeek: () -> Unit,
+    onOpenMonthPicker: () -> Unit
 ) {
     val previousInteraction = remember { MutableInteractionSource() }
     val nextInteraction = remember { MutableInteractionSource() }
+    val monthInteraction = remember { MutableInteractionSource() }
     val startOfWeek = selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
     val weekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
     val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
@@ -302,7 +319,13 @@ private fun MonthCalendarCard(
                 color = Color(0xFF8B95A8),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = monthInteraction,
+                        indication = null,
+                        onClick = onOpenMonthPicker
+                    )
             )
             Text(
                 "›",
@@ -353,6 +376,168 @@ private fun MonthCalendarCard(
                             .size(4.dp)
                             .background(if (taskDates.contains(date)) Color(0xFFF87533) else Color.Transparent, CircleShape)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthPickerOverlay(
+    selectedDate: LocalDate,
+    taskDates: Set<LocalDate>,
+    onDismiss: () -> Unit,
+    onSelectDate: (LocalDate) -> Unit
+) {
+    var visibleMonth by remember(selectedDate) { mutableStateOf(YearMonth.from(selectedDate)) }
+    val weekDays = listOf("S", "M", "T", "W", "T", "F", "S")
+    val monthTitle = visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES")))
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("es", "ES")) else it.toString() }
+
+    val firstDayOffset = visibleMonth.atDay(1).dayOfWeek.value % 7
+    val totalDays = visibleMonth.lengthOfMonth()
+    val cells = buildList<LocalDate?> {
+        repeat(firstDayOffset) { add(null) }
+        (1..totalDays).forEach { day -> add(visibleMonth.atDay(day)) }
+        while (size % 7 != 0) add(null)
+    }
+
+    BackHandler(onBack = onDismiss)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.25f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center
+    ) {
+        val leftInteraction = remember { MutableInteractionSource() }
+        val rightInteraction = remember { MutableInteractionSource() }
+        val closeInteraction = remember { MutableInteractionSource() }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFFF8F9FB))
+                .clickable { }
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(4) {
+                    Box(
+                        modifier = Modifier
+                            .width(8.dp)
+                            .height(22.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color(0xFFDDE1EA))
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "✕",
+                    color = Color(0xFF9CA5B6),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.clickable(
+                        interactionSource = closeInteraction,
+                        indication = null
+                    ) { onDismiss() }
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "‹",
+                    color = Color(0xFF8B95A8),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(
+                        interactionSource = leftInteraction,
+                        indication = null
+                    ) {
+                        visibleMonth = visibleMonth.minusMonths(1)
+                    }
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    monthTitle,
+                    color = Color(0xFF2D374B),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "›",
+                    color = Color(0xFF8B95A8),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(
+                        interactionSource = rightInteraction,
+                        indication = null
+                    ) {
+                        visibleMonth = visibleMonth.plusMonths(1)
+                    }
+                )
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                weekDays.forEach { day ->
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Text(day, color = Color(0xFFB2BAC9), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+
+            cells.chunked(7).forEach { week ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    week.forEach { date ->
+                        val selected = date == selectedDate
+                        val hasTask = date != null && taskDates.contains(date)
+                        val dayInteraction = remember(date) { MutableInteractionSource() }
+
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(
+                                    enabled = date != null,
+                                    interactionSource = dayInteraction,
+                                    indication = null
+                                ) {
+                                    if (date != null) onSelectDate(date)
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(
+                                        if (selected) Color(0xFFF87533) else Color.Transparent,
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = date?.dayOfMonth?.toString() ?: "",
+                                    color = if (selected) Color.White else Color(0xFF30384A),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = StickyFont
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(4.dp)
+                                    .background(
+                                        if (hasTask) Color(0xFFF87533) else Color.Transparent,
+                                        CircleShape
+                                    )
+                            )
+                        }
+                    }
                 }
             }
         }
