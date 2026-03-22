@@ -168,6 +168,7 @@ private fun BoardHomeScreen() {
     var showMonthPicker by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(BoardTab.Board) }
     var appLanguage by remember { mutableStateOf(BoardLocalStore.loadLanguage(context)) }
+    var screenDragX by remember { mutableStateOf(0f) }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -186,10 +187,35 @@ private fun BoardHomeScreen() {
         BoardLocalStore.saveTasks(context, tasks)
     }
 
+    val tabOrder = listOf(BoardTab.Board, BoardTab.Stats, BoardTab.Saved, BoardTab.Settings)
+    fun moveTab(offset: Int) {
+        val current = tabOrder.indexOf(selectedTab)
+        if (current < 0) return
+        val target = (current + offset).coerceIn(0, tabOrder.lastIndex)
+        selectedTab = tabOrder[target]
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(if (selectedTab == BoardTab.Settings) Color(0xFFF9FAFC) else Color(0xFFF3F3F5))
+            .pointerInput(selectedTab, showAddDialog, editingTaskId, showMonthPicker) {
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { _, amount ->
+                        screenDragX += amount
+                    },
+                    onDragEnd = {
+                        if (!showAddDialog && editingTaskId == null && !showMonthPicker) {
+                            when {
+                                screenDragX <= -90f -> moveTab(+1)
+                                screenDragX >= 90f -> moveTab(-1)
+                            }
+                        }
+                        screenDragX = 0f
+                    },
+                    onDragCancel = { screenDragX = 0f }
+                )
+            }
     ) {
         when (selectedTab) {
             BoardTab.Board -> {
@@ -254,7 +280,37 @@ private fun BoardHomeScreen() {
                 )
             }
 
-            else -> Unit
+            BoardTab.Stats -> {
+                PlaceholderScreen(
+                    title = i18n(appLanguage, "Estadisticas", "Statistics"),
+                    subtitle = i18n(
+                        appLanguage,
+                        "Desliza para cambiar entre pantallas.",
+                        "Swipe to move between screens."
+                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 8.dp, bottom = 108.dp)
+                )
+            }
+
+            BoardTab.Saved -> {
+                PlaceholderScreen(
+                    title = i18n(appLanguage, "Guardados", "Saved"),
+                    subtitle = i18n(
+                        appLanguage,
+                        "Desliza para cambiar entre pantallas.",
+                        "Swipe to move between screens."
+                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 8.dp, bottom = 108.dp)
+                )
+            }
         }
 
         BottomBoardNav(
@@ -1446,6 +1502,29 @@ private fun SettingsScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PlaceholderScreen(title: String, subtitle: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            color = Color(0xFF2E374C),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            color = Color(0xFF9AA4B8),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
