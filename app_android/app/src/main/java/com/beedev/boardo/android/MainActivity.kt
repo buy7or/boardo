@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -15,6 +16,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -169,6 +173,7 @@ private fun BoardHomeScreen() {
     var selectedTab by remember { mutableStateOf(BoardTab.Board) }
     var appLanguage by remember { mutableStateOf(BoardLocalStore.loadLanguage(context)) }
     var screenDragX by remember { mutableStateOf(0f) }
+    var tabDirection by remember { mutableStateOf(1) }
 
     val tasksForSelectedDay = tasks.filter { it.dueDate == selectedDate }
     val taskDates = tasks.mapNotNull { it.dueDate }.toSet()
@@ -188,10 +193,20 @@ private fun BoardHomeScreen() {
     }
 
     val tabOrder = listOf(BoardTab.Board, BoardTab.Stats, BoardTab.Saved, BoardTab.Settings)
+    fun navigateToTab(target: BoardTab) {
+        val currentIndex = tabOrder.indexOf(selectedTab)
+        val targetIndex = tabOrder.indexOf(target)
+        if (currentIndex == -1 || targetIndex == -1 || currentIndex == targetIndex) return
+        tabDirection = if (targetIndex > currentIndex) 1 else -1
+        selectedTab = target
+    }
+
     fun moveTab(offset: Int) {
         val current = tabOrder.indexOf(selectedTab)
         if (current < 0) return
         val target = (current + offset).coerceIn(0, tabOrder.lastIndex)
+        if (target == current) return
+        tabDirection = if (target > current) 1 else -1
         selectedTab = tabOrder[target]
     }
 
@@ -217,105 +232,121 @@ private fun BoardHomeScreen() {
                 )
             }
     ) {
-        when (selectedTab) {
-            BoardTab.Board -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .padding(horizontal = 12.dp)
-                        .padding(top = 8.dp)
-                ) {
-                    MonthCalendarCard(
-                        language = appLanguage,
-                        selectedDate = selectedDate,
-                        taskDates = taskDates,
-                        weeklyCompleted = weeklyCompleted,
-                        weeklyTotal = weeklyTotal,
-                        onSelectDate = { selectedDate = it },
-                        onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
-                        onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
-                        onOpenMonthPicker = { showMonthPicker = true }
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    StreakCard(days = streakCount, language = appLanguage)
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(bottom = 118.dp)
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                val slideIn = slideInHorizontally(
+                    animationSpec = tween(280),
+                    initialOffsetX = { fullWidth -> if (tabDirection > 0) fullWidth / 3 else -fullWidth / 3 }
+                ) + fadeIn(animationSpec = tween(220))
+                val slideOut = slideOutHorizontally(
+                    animationSpec = tween(280),
+                    targetOffsetX = { fullWidth -> if (tabDirection > 0) -fullWidth / 4 else fullWidth / 4 }
+                ) + fadeOut(animationSpec = tween(220))
+                slideIn togetherWith slideOut
+            },
+            label = "tab_switch"
+        ) { tab ->
+            when (tab) {
+                BoardTab.Board -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .padding(horizontal = 12.dp)
+                            .padding(top = 8.dp)
                     ) {
-                        itemsIndexed(tasksForSelectedDay, key = { _, task -> task.id }) { index, task ->
-                            val category = categoriesById[task.categoryId] ?: defaultCategories.first()
-                            StickyNoteCard(
-                                task = task,
-                                category = category,
-                                rotation = if (index % 2 == 0) -0.2f else 0.2f,
-                                onOpen = { editingTaskId = task.id }
-                            )
-                        }
+                        MonthCalendarCard(
+                            language = appLanguage,
+                            selectedDate = selectedDate,
+                            taskDates = taskDates,
+                            weeklyCompleted = weeklyCompleted,
+                            weeklyTotal = weeklyTotal,
+                            onSelectDate = { selectedDate = it },
+                            onMovePreviousWeek = { selectedDate = selectedDate.minusWeeks(1) },
+                            onMoveNextWeek = { selectedDate = selectedDate.plusWeeks(1) },
+                            onOpenMonthPicker = { showMonthPicker = true }
+                        )
 
-                        item {
-                            AddNoteCard(onClick = { showAddDialog = true }, language = appLanguage)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        StreakCard(days = streakCount, language = appLanguage)
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(bottom = 118.dp)
+                        ) {
+                            itemsIndexed(tasksForSelectedDay, key = { _, task -> task.id }) { index, task ->
+                                val category = categoriesById[task.categoryId] ?: defaultCategories.first()
+                                StickyNoteCard(
+                                    task = task,
+                                    category = category,
+                                    rotation = if (index % 2 == 0) -0.2f else 0.2f,
+                                    onOpen = { editingTaskId = task.id }
+                                )
+                            }
+
+                            item {
+                                AddNoteCard(onClick = { showAddDialog = true }, language = appLanguage)
+                            }
                         }
                     }
                 }
-            }
 
-            BoardTab.Settings -> {
-                SettingsScreen(
-                    language = appLanguage,
-                    onLanguageChange = {
-                        appLanguage = it
-                        BoardLocalStore.saveLanguage(context, it)
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .padding(horizontal = 12.dp)
-                        .padding(top = 8.dp, bottom = 108.dp)
-                )
-            }
+                BoardTab.Settings -> {
+                    SettingsScreen(
+                        language = appLanguage,
+                        onLanguageChange = {
+                            appLanguage = it
+                            BoardLocalStore.saveLanguage(context, it)
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .padding(horizontal = 12.dp)
+                            .padding(top = 8.dp, bottom = 108.dp)
+                    )
+                }
 
-            BoardTab.Stats -> {
-                PlaceholderScreen(
-                    title = i18n(appLanguage, "Estadisticas", "Statistics"),
-                    subtitle = i18n(
-                        appLanguage,
-                        "Desliza para cambiar entre pantallas.",
-                        "Swipe to move between screens."
-                    ),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .padding(horizontal = 12.dp)
-                        .padding(top = 8.dp, bottom = 108.dp)
-                )
-            }
+                BoardTab.Stats -> {
+                    PlaceholderScreen(
+                        title = i18n(appLanguage, "Estadisticas", "Statistics"),
+                        subtitle = i18n(
+                            appLanguage,
+                            "Desliza para cambiar entre pantallas.",
+                            "Swipe to move between screens."
+                        ),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .padding(horizontal = 12.dp)
+                            .padding(top = 8.dp, bottom = 108.dp)
+                    )
+                }
 
-            BoardTab.Saved -> {
-                PlaceholderScreen(
-                    title = i18n(appLanguage, "Guardados", "Saved"),
-                    subtitle = i18n(
-                        appLanguage,
-                        "Desliza para cambiar entre pantallas.",
-                        "Swipe to move between screens."
-                    ),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .padding(horizontal = 12.dp)
-                        .padding(top = 8.dp, bottom = 108.dp)
-                )
+                BoardTab.Saved -> {
+                    PlaceholderScreen(
+                        title = i18n(appLanguage, "Guardados", "Saved"),
+                        subtitle = i18n(
+                            appLanguage,
+                            "Desliza para cambiar entre pantallas.",
+                            "Swipe to move between screens."
+                        ),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .padding(horizontal = 12.dp)
+                            .padding(top = 8.dp, bottom = 108.dp)
+                    )
+                }
             }
         }
 
         BottomBoardNav(
             selectedTab = selectedTab,
-            onSelectTab = { selectedTab = it },
+            onSelectTab = { navigateToTab(it) },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 12.dp, vertical = 14.dp)
