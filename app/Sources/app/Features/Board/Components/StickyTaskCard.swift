@@ -57,7 +57,6 @@ struct StickyTaskCard: View {
         shape
             .fill(task.category.color)
             .overlay(grainOverlay)
-            .overlay(shineOverlay)
             .overlay(alignment: .topTrailing) { foldCorner }
     }
 
@@ -74,14 +73,6 @@ struct StickyTaskCard: View {
                     )
             }
         }
-    }
-
-    private var shineOverlay: some View {
-        LinearGradient(
-            colors: [Color.white.opacity(0.26), Color.clear, Color.black.opacity(0.07)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
 
     private func tapeOverlay() -> some View {
