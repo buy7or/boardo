@@ -38,6 +38,9 @@ struct CategoryManagerSheet: View {
             .background(AppTheme.Colors.boardBackground.ignoresSafeArea())
             .navigationTitle(L10n.tr("settings.categories.navTitle"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(AppTheme.Colors.boardBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -45,7 +48,7 @@ struct CategoryManagerSheet: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.body.weight(.medium))
-                            .foregroundStyle(AppTheme.Colors.subtitle)
+                            .foregroundStyle(AppTheme.Colors.title)
                             .frame(width: 28, height: 28)
                     }
                     .buttonStyle(.plain)
@@ -63,6 +66,8 @@ struct CategoryManagerSheet: View {
             TextField(L10n.tr("settings.categories.name"), text: $categoryName)
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.words)
+                .foregroundStyle(AppTheme.Colors.title)
+                .tint(AppTheme.Colors.accent)
 
             Text(L10n.tr("settings.categories.color"))
                 .font(.subheadline.weight(.medium))
@@ -172,6 +177,7 @@ struct CategoryManagerSheet: View {
                             viewModel.deleteCategory(category)
                         } label: {
                             Image(systemName: "trash")
+                                .foregroundStyle(.red)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(L10n.tr("common.delete"))

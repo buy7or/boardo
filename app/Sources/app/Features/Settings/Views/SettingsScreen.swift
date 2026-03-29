@@ -109,6 +109,8 @@ struct SettingsScreen: View {
                         Text(tr("settings.language.english")).tag("en")
                     }
                     .pickerStyle(.segmented)
+                    .tint(AppTheme.Colors.accent)
+                    .environment(\.colorScheme, .light)
                 }
                 .padding(16)
                 .background(Color.white)
@@ -148,7 +150,9 @@ struct SettingsScreen: View {
         }
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagerSheet(viewModel: viewModel)
+                .preferredColorScheme(.light)
         }
+        .preferredColorScheme(.light)
     }
 
     @MainActor
