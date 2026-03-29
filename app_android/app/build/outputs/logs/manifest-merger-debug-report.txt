@@ -125,9 +125,9 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/diego
 	android:label
 		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:10:9-41
 	android:roundIcon
-		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:11:9-63
+		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:11:9-57
 	android:icon
-		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:9:9-58
+		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:9:9-52
 	android:allowBackup
 		ADDED from /home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:8:9-35
 	android:theme

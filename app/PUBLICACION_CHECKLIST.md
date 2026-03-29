@@ -17,22 +17,22 @@
 
 ## Calidad minima recomendada antes de enviar
 
-- [ ] Probar instalacion limpia en dispositivo real (sin datos previos).
-- [ ] Validar flujos principales:
-  - [ ] Crear tarea
-  - [ ] Editar tarea
-  - [ ] Completar/descompletar tarea
-  - [ ] Mover fecha
-  - [ ] Notificacion diaria (si esta habilitada)
-- [ ] Revisar localizacion ES/EN (sin textos rotos o truncados).
-- [ ] Revisar accesibilidad basica:
-  - [ ] Tamaños de fuente (Dynamic Type)
-  - [ ] Contraste
-  - [ ] Labels de controles importantes
+- [x] Probar instalacion limpia en dispositivo real (sin datos previos).
+- [x] Validar flujos principales:
+  - [x] Crear tarea
+  - [x] Editar tarea
+  - [x] Completar/descompletar tarea
+  - [x] Mover fecha
+  - [x] Notificacion diaria (si esta habilitada)
+- [x] Revisar localizacion ES/EN (sin textos rotos o truncados).
+- [x] Revisar accesibilidad basica:
+  - [x] Tamaños de fuente (Dynamic Type)
+  - [x] Contraste
+  - [x] Labels de controles importantes
 
 ## Recomendado para reducir riesgo de rechazo
 
-- [ ] Añadir una politica de privacidad publica (URL) aunque no recojas datos personales.
+- [x] Añadir una politica de privacidad publica (URL) aunque no recojas datos personales.
 - [ ] Revisar permisos y textos mostrados al usuario (notificaciones claras y coherentes).
 - [ ] Eliminar restos de desarrollo/documentacion interna no necesaria para release.
 

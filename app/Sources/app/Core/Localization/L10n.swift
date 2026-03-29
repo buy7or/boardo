@@ -36,9 +36,15 @@ enum L10n {
     }
 
     private static func bundle(languageCode: String) -> Bundle {
-        guard let path = Bundle.module.path(forResource: languageCode, ofType: "lproj"),
+        #if SWIFT_PACKAGE
+        let baseBundle = Bundle.module
+        #else
+        let baseBundle = Bundle.main
+        #endif
+
+        guard let path = baseBundle.path(forResource: languageCode, ofType: "lproj"),
               let localizedBundle = Bundle(path: path) else {
-            return .module
+            return baseBundle
         }
         return localizedBundle
     }

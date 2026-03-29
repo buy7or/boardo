@@ -34,12 +34,12 @@
 22-->[androidx.core:core:1.15.0] /home/diego/.gradle/caches/transforms-4/8bb8a3a7ca48bae1db358a872d31f1aa/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
 23        android:debuggable="true"
 24        android:extractNativeLibs="false"
-25        android:icon="@android:drawable/sym_def_app_icon"
-25-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:9:9-58
+25        android:icon="@drawable/ic_launcher_custom"
+25-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:9:9-52
 26        android:label="@string/app_name"
 26-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:10:9-41
-27        android:roundIcon="@android:drawable/sym_def_app_icon"
-27-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:11:9-63
+27        android:roundIcon="@drawable/ic_launcher_custom"
+27-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:11:9-57
 28        android:supportsRtl="true"
 28-->/home/diego/Apps/boardo/app_android/app/src/main/AndroidManifest.xml:12:9-35
 29        android:theme="@style/Theme.BoardoAndroid" >

@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-debug-62:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-main-64:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-debug-62:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-main-64:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-debug-62:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-main-64:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-debug-62:/drawable_ic_launcher_background.xml.flat",
+        "source": "/home/diego/.gradle/daemon/8.7/com.beedev.boardo.android.app-main-64:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.beedev.boardo.android.app-debug-62:/drawable-nodpi_ic_launcher_custom.png.flat",
+        "source": "com.beedev.boardo.android.app-main-64:/drawable-nodpi/ic_launcher_custom.png"
+    }
+]
